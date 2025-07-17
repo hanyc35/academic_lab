@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"GDP"搜索结果 - 兆睿智慧云</title>
+    <script src="tailwind.css"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#FF7D00',
+                        dark: '#1D2939',
+                        'gray-light': '#F9FAFB',
+                        'gray-medium': '#667085'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 30px -5px rgba(0, 0, 0, 0.1)',
+                        'card-hover': '0 20px 40px -5px rgba(22, 93, 255, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .scroll-indicator {
+                height: 3px;
+                background-color: #165DFF;
+                width: 0%;
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 100;
+                transition: width 0.2s ease;
+            }
+            .tree-item-active {
+                @apply bg-primary/10 text-primary border-l-4 border-primary;
+            }
+            .tree-item-transition {
+                transition: all 0.3s ease;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-neutral-100 min-h-screen">
+    <!-- 导航栏 -->
+    <header id="navbar" class="fixed w-full z-50 transition-all duration-300 bg-white/90 backdrop-blur-sm shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center space-x-2">
+                        <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                            <i class="fa fa-line-chart text-white text-xl"></i>
+                        </div>
+                        <span class="text-xl font-bold text-dark">兆睿智慧云</span>
+                    </a>
+                </div>
+
+                <!-- 搜索框 -->
+                <div class="max-w-xl w-full mx-4">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa fa-search text-neutral-400"></i>
+                        </div>
+                        <input type="text" value="GDP" class="block w-full pl-12 pr-10 py-2 border border-neutral-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300" placeholder="搜索数据集、文章、作者...">
+                        <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-neutral-400 hover:text-neutral-600">
+                            <i class="fa fa-times-circle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 用户菜单 -->
+                <div class="flex items-center">
+                    <button type="button" class="text-neutral-500 hover:text-neutral-700 mr-4">
+                        <i class="fa fa-bell text-xl"></i>
+                    </button>
+                    <div class="relative">
+                        <button type="button" class="flex items-center">
+                            <img class="h-8 w-8 rounded-full object-cover" src="https://picsum.photos/id/1005/200/200" alt="用户头像">
+                            <span class="ml-2 text-sm font-medium text-neutral-700 hidden md:block">张三</span>
+                            <i class="fa fa-chevron-down ml-1 text-xs text-neutral-400 hidden md:block"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="container mx-auto px-4 py-24">
+        <!-- 搜索结果统计 -->
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-neutral-900">搜索结果："GDP"</h1>
+            <p class="text-neutral-500 mt-1">找到约 1,234 个相关数据集</p>
+        </div>
+
+        <!-- 筛选工具栏 -->
+        <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- 时间筛选 -->
+                <div class="flex items-center">
+                    <label class="text-sm font-medium text-neutral-700 mr-2">时间：</label>
+                    <select class="text-sm border border-neutral-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        <option>不限</option>
+                        <option>最近一年</option>
+                        <option>最近三年</option>
+                        <option>最近五年</option>
+                    </select>
+                </div>
+
+                <!-- 领域筛选 -->
+                <div class="flex items-center">
+                    <label class="text-sm font-medium text-neutral-700 mr-2">领域：</label>
+                    <select class="text-sm border border-neutral-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        <option>不限</option>
+                        <option>经济学</option>
+                        <option>社会学</option>
+                        <option>统计学</option>
+                        <option>地理学</option>
+                    </select>
+                </div>
+
+                <!-- 来源筛选 -->
+                <div class="flex items-center">
+                    <label class="text-sm font-medium text-neutral-700 mr-2">来源：</label>
+                    <select class="text-sm border border-neutral-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        <option>不限</option>
+                        <option>国家统计局</option>
+                        <option>世界银行</option>
+                        <option>国际货币基金组织</option>
+                        <option>地方政府</option>
+                    </select>
+                </div>
+
+                <!-- 排序方式 -->
+                <div class="ml-auto flex items-center">
+                    <label class="text-sm font-medium text-neutral-700 mr-2">排序：</label>
+                    <select class="text-sm border border-neutral-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        <option>相关性</option>
+                        <option>最新更新</option>
+                        <option>最多下载</option>
+                        <option>评分最高</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 活跃筛选标签 -->
+            <div class="mt-4 pt-4 border-t border-neutral-200 flex flex-wrap gap-2">
+                <span class="text-sm font-medium text-neutral-700 mr-2">已选：</span>
+                <span class="filter-badge">
+                    时间：最近五年 <i class="fa fa-times ml-1"></i>
+                </span>
+                <span class="filter-badge">
+                    领域：经济学 <i class="fa fa-times ml-1"></i>
+                </span>
+                <button type="button" class="text-sm text-primary hover:text-primary/80 font-medium ml-2">
+                    清除全部
+                </button>
+            </div>
+        </div>
+
+        <!-- 搜索结果列表 -->
+        <div class="space-y-4 mb-8">
+            <!-- 结果项 1 -->
+            <div class="search-result-card">
+                <div class="p-5">
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-neutral-900 mb-2">
+                                <a href="#" class="hover:text-primary transition-colors duration-200">
+                                    中国<span class="keyword-highlight">GDP</span>年度数据（1978-2023）
+                                </a>
+                            </h3>
+                            <p class="text-neutral-600 mb-3 line-clamp-2">
+                                本数据集包含中国1978年至2023年的年度<span class="keyword-highlight">GDP</span>数据，
+                                包括名义<span class="keyword-highlight">GDP</span>、实际<span class="keyword-highlight">GDP</span>增长率、人均<span class="keyword-highlight">GDP</span>等指标，
+                                数据来源为国家统计局官方发布。
+                            </p>
+                            <div class="flex flex-wrap gap-4 text-sm text-neutral-500">
+                                <div class="flex items-center">
+                                    <i class="fa fa-building-o mr-1.5"></i>
+                                    <span>国家统计局</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-folder-o mr-1.5"></i>
+                                    <span>经济数据 / 宏观经济</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-tags mr-1.5"></i>
+                                    <span>经济学, 统计学</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-calendar-o mr-1.5"></i>
+                                    <span>2023-12-31 更新</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-download mr-1.5"></i>
+                                    <span>3,452 下载</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="text-xs font-medium text-green-700 bg-green-100 px-2.5 py-1 rounded-full mb-3">
+                                免费获取
+                            </span>
+                            <button type="button" class="text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200">
+                                查看详情 <i class="fa fa-angle-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 结果项 2 -->
+            <div class="search-result-card">
+                <div class="p-5">
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-neutral-900 mb-2">
+                                <a href="#" class="hover:text-primary transition-colors duration-200">
+                                    全球主要经济体<span class="keyword-highlight">GDP</span>季度数据（2010-2024）
+                                </a>
+                            </h3>
+                            <p class="text-neutral-600 mb-3 line-clamp-2">
+                                本数据集包含美国、欧盟、日本、中国等主要经济体的季度<span class="keyword-highlight">GDP</span>数据，
+                                包括实际<span class="keyword-highlight">GDP</span>增长率、环比增长率、同比增长率等，数据来自国际货币基金组织和各国官方统计机构。
+                            </p>
+                            <div class="flex flex-wrap gap-4 text-sm text-neutral-500">
+                                <div class="flex items-center">
+                                    <i class="fa fa-building-o mr-1.5"></i>
+                                    <span>国际货币基金组织</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-folder-o mr-1.5"></i>
+                                    <span>国际经济 / 宏观经济</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-tags mr-1.5"></i>
+                                    <span>国际经济学, 比较研究</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-calendar-o mr-1.5"></i>
+                                    <span>2024-03-31 更新</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-download mr-1.5"></i>
+                                    <span>2,876 下载</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="text-xs font-medium text-yellow-700 bg-yellow-100 px-2.5 py-1 rounded-full mb-3">
+                                需申请
+                            </span>
+                            <button type="button" class="text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200">
+                                查看详情 <i class="fa fa-angle-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 结果项 3 -->
+            <div class="search-result-card">
+                <div class="p-5">
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-neutral-900 mb-2">
+                                <a href="#" class="hover:text-primary transition-colors duration-200">
+                                    中国省级<span class="keyword-highlight">GDP</span>与产业结构数据（2000-2023）
+                                </a>
+                            </h3>
+                            <p class="text-neutral-600 mb-3 line-clamp-2">
+                                本数据集包含中国31个省、自治区、直辖市的年度<span class="keyword-highlight">GDP</span>及其产业结构数据，
+                                包括第一、二、三产业增加值及其占比，以及各地区人均<span class="keyword-highlight">GDP</span>等指标。
+                            </p>
+                            <div class="flex flex-wrap gap-4 text-sm text-neutral-500">
+                                <div class="flex items-center">
+                                    <i class="fa fa-building-o mr-1.5"></i>
+                                    <span>国家统计局</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-folder-o mr-1.5"></i>
+                                    <span>区域经济 / 产业经济</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-tags mr-1.5"></i>
+                                    <span>区域经济学, 产业经济学</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-calendar-o mr-1.5"></i>
+                                    <span>2023-12-31 更新</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-download mr-1.5"></i>
+                                    <span>1,985 下载</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="text-xs font-medium text-green-700 bg-green-100 px-2.5 py-1 rounded-full mb-3">
+                                免费获取
+                            </span>
+                            <button type="button" class="text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200">
+                                查看详情 <i class="fa fa-angle-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 结果项 4 -->
+            <div class="search-result-card">
+                <div class="p-5">
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-neutral-900 mb-2">
+                                <a href="#" class="hover:text-primary transition-colors duration-200">
+                                    世界银行<span class="keyword-highlight">GDP</span>预测数据（2024-2030）
+                                </a>
+                            </h3>
+                            <p class="text-neutral-600 mb-3 line-clamp-2">
+                                本数据集包含世界银行对全球180多个国家和地区的<span class="keyword-highlight">GDP</span>预测数据，
+                                包括实际<span class="keyword-highlight">GDP</span>增长率、人均<span class="keyword-highlight">GDP</span>等指标的预测值，预测期为2024-2030年。
+                            </p>
+                            <div class="flex flex-wrap gap-4 text-sm text-neutral-500">
+                                <div class="flex items-center">
+                                    <i class="fa fa-building-o mr-1.5"></i>
+                                    <span>世界银行</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-folder-o mr-1.5"></i>
+                                    <span>国际经济 / 经济预测</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-tags mr-1.5"></i>
+                                    <span>发展经济学, 预测分析</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-calendar-o mr-1.5"></i>
+                                    <span>2024-06-01 更新</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-download mr-1.5"></i>
+                                    <span>1,567 下载</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="text-xs font-medium text-red-700 bg-red-100 px-2.5 py-1 rounded-full mb-3">
+                                付费数据
+                            </span>
+                            <button type="button" class="text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200">
+                                查看详情 <i class="fa fa-angle-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 结果项 5 -->
+            <div class="search-result-card">
+                <div class="p-5">
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-neutral-900 mb-2">
+                                <a href="#" class="hover:text-primary transition-colors duration-200">
+                                    中国地级市<span class="keyword-highlight">GDP</span>与人口数据（2015-2022）
+                                </a>
+                            </h3>
+                            <p class="text-neutral-600 mb-3 line-clamp-2">
+                                本数据集包含中国333个地级市的年度<span class="keyword-highlight">GDP</span>、人口、人均<span class="keyword-highlight">GDP</span>等数据，
+                                数据来源于各地方统计年鉴和公开数据整理，为区域经济研究提供微观层面的数据支持。
+                            </p>
+                            <div class="flex flex-wrap gap-4 text-sm text-neutral-500">
+                                <div class="flex items-center">
+                                    <i class="fa fa-building-o mr-1.5"></i>
+                                    <span>综合来源</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-folder-o mr-1.5"></i>
+                                    <span>区域经济 / 城市经济</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-tags mr-1.5"></i>
+                                    <span>城市经济学, 区域发展</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-calendar-o mr-1.5"></i>
+                                    <span>2023-06-30 更新</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fa fa-download mr-1.5"></i>
+                                    <span>1,234 下载</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="text-xs font-medium text-yellow-700 bg-yellow-100 px-2.5 py-1 rounded-full mb-3">
+                                需申请
+                            </span>
+                            <button type="button" class="text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-200">
+                                查看详情 <i class="fa fa-angle-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分页 -->
+        <div class="flex justify-center mt-10">
+            <nav class="inline-flex rounded-md shadow-sm" aria-label="分页">
+                <a href="#" class="pagination-link rounded-l-md px-3 py-2 border border-gray-300">
+                    <i class="fa fa-chevron-left"></i>
+                </a>
+                <a href="#" class="pagination-link px-3 py-2 border border-gray-300">1</a>
+                <a href="#" class="pagination-link pagination-active px-3 py-2 border border-gray-300 bg-primary text-white">2</a>
+                <a href="#" class="pagination-link px-3 py-2 border border-gray-300">3</a>
+                <span class="pagination-link px-3 py-2 border border-gray-300">...</span>
+                <a href="#" class="pagination-link px-3 py-2 border border-gray-300">12</a>
+                <a href="#" class="pagination-link rounded-r-md px-3 py-2 border border-gray-300">
+                    <i class="fa fa-chevron-right"></i>
+                </a>
+            </nav>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-neutral-200 mt-12">
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <i class="fa fa-database text-primary text-2xl mr-2"></i>
+                        <span class="font-bold text-xl text-neutral-900">兆睿智慧云</span>
+                    </div>
+                    <p class="text-neutral-600 text-sm">
+                        提供高质量的科研数据资源，支持学术研究与创新。
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-neutral-900 mb-4">快速链接</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="text-neutral-600 hover:text-primary transition-colors duration-200">首页</a></li>
+                        <li><a href="#" class="text-neutral-600 hover:text-primary transition-colors duration-200">数据集</a></li>
+                        <li><a href="#" class="text-neutral-600 hover:text-primary transition-colors duration-200">数据工具</a></li>
+                        <li><a href="#" class="text-neutral-600 hover:text-primary transition-colors duration-200">关于我们</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-neutral-900 mb-4">支持</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="text-neutral-600 hover:text-primary transition-colors duration-200">帮助中心</a></li>
+                        <li><a href="#" class="text-neutral-600 hover:text-primary transition-colors duration-200">使用指南</a></li>
+                        <li><a href="#" class="text-neutral-600 hover:text-primary transition-colors duration-200">API文档</a></li>
+                        <li><a href="#" class="text-neutral-600 hover:text-primary transition-colors duration-200">联系我们</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-neutral-900 mb-4">关注我们</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-neutral-600 hover:text-primary transition-colors duration-200">
+                            <i class="fa fa-weibo text-xl"></i>
+                        </a>
+                        <a href="#" class="text-neutral-600 hover:text-primary transition-colors duration-200">
+                            <i class="fa fa-wechat text-xl"></i>
+                        </a>
+                        <a href="#" class="text-neutral-600 hover:text-primary transition-colors duration-200">
+                            <i class="fa fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-neutral-600 hover:text-primary transition-colors duration-200">
+                            <i class="fa fa-github text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-neutral-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-sm text-neutral-500">© 2025 兆睿数据云. 保留所有权利.</p>
+                <div class="mt-4 md:mt-0 flex space-x-6">
+                    <a href="#" class="text-sm text-neutral-500 hover:text-primary transition-colors duration-200">隐私政策</a>
+                    <a href="#" class="text-sm text-neutral-500 hover:text-primary transition-colors duration-200">用户协议</a>
+                    <a href="#" class="text-sm text-neutral-500 hover:text-primary transition-colors duration-200">数据来源</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 高亮搜索关键词函数
+        function highlightKeywords() {
+            const searchTerm = "GDP";
+            const elements = document.querySelectorAll('.search-result-card h3, .search-result-card p');
+            
+            elements.forEach(element => {
+                const text = element.innerHTML;
+                const highlightedText = text.replace(
+                    new RegExp(searchTerm, 'gi'),
+                    '<span class="keyword-highlight">$&</span>'
+                );
+                element.innerHTML = highlightedText;
+            });
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            highlightKeywords();
+        });
+    </script>
+</body>
+</html>

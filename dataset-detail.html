@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国宏观经济数据库 - 兆睿智慧云</title>
+    <script src="tailwind.css"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#FF7D00',
+                        dark: '#1D2939',
+                        'gray-light': '#F9FAFB',
+                        'gray-medium': '#667085'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 30px -5px rgba(0, 0, 0, 0.1)',
+                        'card-hover': '0 20px 40px -5px rgba(22, 93, 255, 0.15)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .scroll-indicator {
+                height: 3px;
+                background-color: #165DFF;
+                width: 0%;
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 100;
+                transition: width 0.2s ease;
+            }
+            .tree-item-active {
+                @apply bg-primary/10 text-primary border-l-4 border-primary;
+            }
+            .tree-item-transition {
+                transition: all 0.3s ease;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter text-dark bg-white">
+    <!-- 滚动指示器 -->
+    <div class="scroll-indicator" id="scrollIndicator"></div>
+    
+    <!-- 导航栏 -->
+    <header id="navbar" class="fixed w-full z-50 transition-all duration-300 bg-white/90 backdrop-blur-sm shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center space-x-2">
+                        <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                            <i class="fa fa-line-chart text-white text-xl"></i>
+                        </div>
+                        <span class="text-xl font-bold text-dark">兆睿智慧云</span>
+                    </a>
+                </div>
+                
+                <!-- 桌面导航 -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="index.html" class="text-dark hover:text-primary transition-colors font-medium">首页</a>
+                    <a href="data-marketplace.html" class="text-primary border-b-2 border-primary pb-1 font-medium">科研数据库</a>
+                    <!-- AI实验室下拉菜单 -->
+                    <div class="relative group">
+                        <a href="#" class="text-dark hover:text-primary transition-colors font-medium">AI实验室</a>
+                        
+                        <!-- 下拉菜单内容 -->
+                        <div class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2 z-10">
+                            <a href="data_ask.html" target="_blank" class="block px-4 py-2 text-sm text-dark-2 hover:bg-primary/5 hover:text-primary">AI智能问数</a>
+                            <a href="AI_research_reading.html" target="_blank" class="block px-4 py-2 text-sm text-dark-2 hover:bg-primary/5 hover:text-primary">AI科研助手</a>
+                            <a href="http://yypt-front-spare.sit.91lyd.com/askone-manage-pc/#/intelligentTraineeManage/traineeTaskList" target="_blank" class="block px-4 py-2 text-sm text-dark-2 hover:bg-primary/5 hover:text-primary">AI机器人对抗</a>
+                        </div>
+                    </div>
+                    
+                    <a href="https://shixun.neegle.net/practisepro_student/student#/login/0" target="_blank" class="text-dark hover:text-primary transition-colors font-medium">教学资源</a>
+                    <a href="#" class="text-dark hover:text-primary transition-colors font-medium">案例中心</a>
+                </nav>
+                
+                <div class="flex items-center space-x-4">
+                    <a href="#" class="hidden sm:inline-block text-primary hover:text-primary/80 font-medium transition-colors">登录</a>
+                    <a href="#" class="bg-primary hover:bg-primary/90 text-white font-medium px-5 py-2 rounded-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-xl">免费试用</a>
+                    <button class="md:hidden text-dark focus:outline-none" id="mobileMenuButton">
+                        <i class="fa fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 移动端导航菜单 -->
+        <div id="mobileMenu" class="md:hidden hidden bg-white shadow-lg rounded-b-xl mx-4 overflow-hidden">
+            <div class="flex flex-col py-2">
+                <a href="index.html" class="px-4 py-3 hover:bg-gray-light transition-colors">首页</a>
+                <a href="data-marketplace.html" class="px-4 py-3 bg-primary/10 text-primary font-medium">科研数据库</a>
+                <a href="#" class="px-4 py-3 hover:bg-gray-light transition-colors">AI实验室</a>
+                <a href="#" class="px-4 py-3 hover:bg-gray-light transition-colors">教学资源</a>
+                <a href="#" class="px-4 py-3 hover:bg-gray-light transition-colors">案例中心</a>
+                <a href="#" class="px-4 py-3 text-primary hover:bg-gray-light transition-colors">登录</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 面包屑导航 -->
+    <div class="pt-28 pb-4 bg-gray-light">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex text-sm">
+                <a href="index.html" class="text-gray-medium hover:text-primary">首页</a>
+                <span class="mx-2 text-gray-medium">/</span>
+                <a href="data-marketplace.html" class="text-gray-medium hover:text-primary">科研数据库</a>
+                <span class="mx-2 text-gray-medium">/</span>
+                <span class="text-primary font-medium">中国宏观经济数据库</span>
+            </nav>
+        </div>
+    </div>
+
+    <!-- 主要内容区域 -->
+    <section class="py-8 bg-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- 左侧目录树 -->
+                <div class="lg:w-1/4 xl:w-1/5 bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="p-4 border-b border-gray-100">
+                        <h3 class="font-bold text-lg">数据库目录</h3>
+                    </div>
+                    
+                    <div class="p-2">
+                        <!-- 年度数据 -->
+                        <div class="mb-2">
+                            <button class="flex items-center justify-between w-full p-3 text-left font-medium rounded-lg hover:bg-gray-light tree-item-transition" onclick="toggleSubmenu('annualData')">
+                                <span>年度数据</span>
+                                <i class="fa fa-chevron-down transition-transform duration-300" id="annualDataIcon"></i>
+                            </button>
+                            
+                            <div class="pl-4 mt-1 hidden tree-item-transition" id="annualData">
+                                <!-- 综合 -->
+                                <div class="mb-2">
+                                    <button class="flex items-center justify-between w-full p-3 text-left font-medium rounded-lg hover:bg-gray-light tree-item-transition" onclick="toggleSubmenu('annualGeneral')">
+                                        <span>综合</span>
+                                        <i class="fa fa-chevron-down transition-transform duration-300" id="annualGeneralIcon"></i>
+                                    </button>
+                                    
+                                    <div class="pl-4 mt-1 hidden tree-item-transition" id="annualGeneral">
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('行政区划')">
+                                            行政区划
+                                        </a>
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('人均主要工农业产品产量')">
+                                            人均主要工农业产品产量
+                                        </a>
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('法人单位数')">
+                                            法人单位数
+                                        </a>
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('企业法人单位数')">
+                                            企业法人单位数
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- 国民经济核算 -->
+                                <div class="mb-2">
+                                    <button class="flex items-center justify-between w-full p-3 text-left font-medium rounded-lg hover:bg-gray-light tree-item-transition" onclick="toggleSubmenu('annualGDP')">
+                                        <span>国民经济核算</span>
+                                        <i class="fa fa-chevron-down transition-transform duration-300" id="annualGDPIcon"></i>
+                                    </button>
+                                    
+                                    <div class="pl-4 mt-1 hidden tree-item-transition" id="annualGDP">
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('国内生产总值')">
+                                            国内生产总值
+                                        </a>
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('支出法国内生产总值')">
+                                            支出法国内生产总值
+                                        </a>
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('地区生产总值')">
+                                            地区生产总值
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- 人口 -->
+                                <div class="mb-2">
+                                    <button class="flex items-center justify-between w-full p-3 text-left font-medium rounded-lg hover:bg-gray-light tree-item-transition" onclick="toggleSubmenu('annualPopulation')">
+                                        <span>人口</span>
+                                        <i class="fa fa-chevron-down transition-transform duration-300" id="annualPopulationIcon"></i>
+                                    </button>
+                                    
+                                    <div class="pl-4 mt-1 hidden tree-item-transition" id="annualPopulation">
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('人口总量和构成')">
+                                            人口总量和构成
+                                        </a>
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('人口出生率、死亡率和自然增长率')">
+                                            人口出生率、死亡率和自然增长率
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- 就业人员和工资 -->
+                                <div class="mb-2">
+                                    <button class="flex items-center justify-between w-full p-3 text-left font-medium rounded-lg hover:bg-gray-light tree-item-transition" onclick="toggleSubmenu('annualEmployment')">
+                                        <span>就业人员和工资</span>
+                                        <i class="fa fa-chevron-down transition-transform duration-300" id="annualEmploymentIcon"></i>
+                                    </button>
+                                    
+                                    <div class="pl-4 mt-1 hidden tree-item-transition" id="annualEmployment">
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('就业人员数')">
+                                            就业人员数
+                                        </a>
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('城镇单位就业人员工资总额')">
+                                            城镇单位就业人员工资总额
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- 固定资产投资和房地产 -->
+                                <div class="mb-2">
+                                    <button class="flex items-center justify-between w-full p-3 text-left font-medium rounded-lg hover:bg-gray-light tree-item-transition" onclick="toggleSubmenu('annualInvestment')">
+                                        <span>固定资产投资和房地产</span>
+                                        <i class="fa fa-chevron-down transition-transform duration-300" id="annualInvestmentIcon"></i>
+                                    </button>
+                                    
+                                    <div class="pl-4 mt-1 hidden tree-item-transition" id="annualInvestment">
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('固定资产投资')">
+                                            固定资产投资
+                                        </a>
+                                        <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('房地产开发')">
+                                            房地产开发
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 季度数据 -->
+                        <div class="mb-2">
+                            <button class="flex items-center justify-between w-full p-3 text-left font-medium rounded-lg hover:bg-gray-light tree-item-transition" onclick="toggleSubmenu('quarterlyData')">
+                                <span>季度数据</span>
+                                <i class="fa fa-chevron-down transition-transform duration-300" id="quarterlyDataIcon"></i>
+                            </button>
+                            
+                            <div class="pl-4 mt-1 hidden tree-item-transition" id="quarterlyData">
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('国内生产总值')">
+                                    国内生产总值
+                                </a>
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('工业生产')">
+                                    工业生产
+                                </a>
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('固定资产投资')">
+                                    固定资产投资
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- 月度数据 -->
+                        <div class="mb-2">
+                            <button class="flex items-center justify-between w-full p-3 text-left font-medium rounded-lg hover:bg-gray-light tree-item-transition" onclick="toggleSubmenu('monthlyData')">
+                                <span>月度数据</span>
+                                <i class="fa fa-chevron-down transition-transform duration-300" id="monthlyDataIcon"></i>
+                            </button>
+                            
+                            <div class="pl-4 mt-1 hidden tree-item-transition" id="monthlyData">
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('居民消费价格指数')">
+                                    居民消费价格指数
+                                </a>
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('工业生产者价格指数')">
+                                    工业生产者价格指数
+                                </a>
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('工业生产主要指标')">
+                                    工业生产主要指标
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- 地区数据 -->
+                        <div class="mb-2">
+                            <button class="flex items-center justify-between w-full p-3 text-left font-medium rounded-lg hover:bg-gray-light tree-item-transition" onclick="toggleSubmenu('regionalData')">
+                                <span>地区数据</span>
+                                <i class="fa fa-chevron-down transition-transform duration-300" id="regionalDataIcon"></i>
+                            </button>
+                            
+                            <div class="pl-4 mt-1 hidden tree-item-transition" id="regionalData">
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('地区生产总值')">
+                                    地区生产总值
+                                </a>
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('地区财政收支')">
+                                    地区财政收支
+                                </a>
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('地区居民生活')">
+                                    地区居民生活
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- 部门数据 -->
+                        <div class="mb-2">
+                            <button class="flex items-center justify-between w-full p-3 text-left font-medium rounded-lg hover:bg-gray-light tree-item-transition" onclick="toggleSubmenu('sectorData')">
+                                <span>部门数据</span>
+                                <i class="fa fa-chevron-down transition-transform duration-300" id="sectorDataIcon"></i>
+                            </button>
+                            
+                            <div class="pl-4 mt-1 hidden tree-item-transition" id="sectorData">
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('农业')">
+                                    农业
+                                </a>
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('工业')">
+                                    工业
+                                </a>
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('建筑业')">
+                                    建筑业
+                                </a>
+                                <a href="#" class="block p-3 rounded-lg hover:bg-gray-light tree-item-transition" onclick="loadDataset('交通运输业')">
+                                    交通运输业
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右侧详情内容 -->
+                <div class="lg:w-3/4 xl:w-4/5" id="datasetContent">
+                    <!-- 初始提示信息 -->
+                    <div class="h-[50vh] flex flex-col items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100">
+                        <div class="w-20 h-20 mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                            <i class="fa fa-folder-open-o text-gray-400 text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-medium text-gray-500 mb-2">请选择数据集</h3>
+                        <p class="text-gray-400">从左侧目录中选择具体的数据项以查看详情</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white pt-16 pb-8">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+                <div>
+                    <div class="flex items-center space-x-2 mb-6">
+                        <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
+                            <i class="fa fa-line-chart text-primary text-xl"></i>
+                        </div>
+                        <span class="text-xl font-bold">兆睿智慧云</span>
+                    </div>
+                    <p class="text-gray-400 mb-6">
+                        本科院校经管财税教育SaaS平台，提供专业的财经数据和AI分析工具，助力教学与科研创新。
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-white/10 hover:bg-primary transition-colors flex items-center justify-center">
+                            <i class="fa fa-weixin"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-white/10 hover:bg-primary transition-colors flex items-center justify-center">
+                            <i class="fa fa-weibo"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-white/10 hover:bg-primary transition-colors flex items-center justify-center">
+                            <i class="fa fa-qq"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold mb-6">产品服务</h3>
+                    <ul class="space-y-4">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">科研数据库</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">AI实验室</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">教学资源</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">科研支持</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">定制服务</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold mb-6">帮助中心</h3>
+                    <ul class="space-y-4">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">使用指南</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">常见问题</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">API文档</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">视频教程</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">联系我们</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold mb-6">联系我们</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <i class="fa fa-map-marker mt-1 mr-3 text-primary"></i>
+                            <span class="text-gray-400">杭州市税友亿企赢大厦</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-phone mt-1 mr-3 text-primary"></i>
+                            <span class="text-gray-400">400-123-4567</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-envelope mt-1 mr-3 text-primary"></i>
+                            <span class="text-gray-400">contact@servyou.com.cn</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-400 text-sm mb-4 md:mb-0">
+                        © 2025 兆睿智慧云. 保留所有权利.
+                    </p>
+                    <div class="flex space-x-6">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">隐私政策</a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">服务条款</a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">网站地图</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 导航栏滚动效果
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            const scrollIndicator = document.getElementById('scrollIndicator');
+            
+            if (window.scrollY > 50) {
+                navbar.classList.add('py-2', 'shadow-md');
+                navbar.classList.remove('py-4');
+            } else {
+                navbar.classList.add('py-4');
+                navbar.classList.remove('py-2', 'shadow-md');
+            }
+            
+            // 更新滚动指示器
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            scrollIndicator.style.width = scrolled + "%";
+        });
+        
+        // 移动端菜单切换
+        document.getElementById('mobileMenuButton').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                    
+                    // 如果是移动端，点击后关闭菜单
+                    const mobileMenu = document.getElementById('mobileMenu');
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                }
+            });
+        });
+        
+        // 目录树切换
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            const icon = document.getElementById(id + 'Icon');
+            
+            // 关闭其他同级菜单
+            const parent = submenu.parentElement;
+            const siblings = Array.from(parent.children).filter(child => 
+                child !== submenu.parentElement.querySelector('button')
+            );
+            
+            siblings.forEach(sibling => {
+                if (sibling.id !== id && sibling.classList.contains('tree-item-transition') && !sibling.classList.contains('hidden')) {
+                    sibling.classList.add('hidden');
+                    const siblingIcon = sibling.parentElement.querySelector('i');
+                    if (siblingIcon) siblingIcon.classList.remove('rotate-180');
+                }
+            });
+            
+            // 切换当前菜单
+            if (submenu.classList.contains('hidden')) {
+                submenu.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                submenu.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+        
+        // 加载数据集详情
+        function loadDataset(datasetName) {
+            // 模拟加载动画
+            const datasetContent = document.getElementById('datasetContent');
+            datasetContent.innerHTML = `
+                <div class="h-[50vh] flex flex-col items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="w-16 h-16 mb-6 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                    <h3 class="text-xl font-medium text-gray-700 mb-2">加载中...</h3>
+                    <p class="text-gray-500">正在加载 ${datasetName} 数据集详情</p>
+                </div>
+            `;
+            
+            // 模拟网络请求延迟
+            setTimeout(() => {
+                // 根据数据集名称生成不同的详情内容
+                let datasetDescription = '';
+                let datasetPreview = '';
+                
+                switch(datasetName) {
+                    case '行政区划':
+                        datasetDescription = `
+                            <p class="text-gray-medium mb-4">
+                                本数据集包含中国行政区划的详细信息，覆盖全国31个省、自治区、直辖市，333个地级行政区划单位和2844个县级行政区划单位。数据内容包括行政区划代码、名称、级别、所属上级行政区划等信息。
+                            </p>
+                            <p class="text-gray-medium mb-4">
+                                数据来源可靠，经过严格的质量控制和校验，确保数据的准确性和完整性。本数据集可用于区域经济分析、地理信息系统开发、人口统计分析等多种研究和应用场景。
+                            </p>
+                        `;
+                        
+                        datasetPreview = `
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                字段
+                                            </th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                类型
+                                            </th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                描述
+                                            </th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                示例值
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                region_code
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                string
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                行政区划代码（国家标准GB/T 2260）
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                110000
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                region_name
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                string
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                行政区划名称
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                北京市
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                region_level
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                integer
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                行政区划级别（1:省级, 2:地级, 3:县级）
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                1
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                parent_code
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                string
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                上级行政区划代码
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                000000
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                        break;
+                        
+                    case '国内生产总值':
+                        datasetDescription = `
+                            <p class="text-gray-medium mb-4">
+                                本数据集包含中国国内生产总值(GDP)的详细数据，按季度和年度更新。数据内容包括GDP总量、各产业增加值、支出法GDP构成等。
+                            </p>
+                            <p class="text-gray-medium mb-4">
+                                数据来源为国家统计局，经过严格的质量控制和校验，确保数据的准确性和可比性。本数据集可用于宏观经济分析、政策研究、经济预测等多种研究和应用场景。
+                            </p>
+                        `;
+                        
+                        datasetPreview = `
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                字段
+                                            </th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                类型
+                                            </th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                描述
+                                            </th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                示例值
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                year
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                integer
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                年份
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                2025
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                quarter
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                integer
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                季度
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                1
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                gdp_total
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                float
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                GDP总量(亿元)
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                284997.7
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                primary_industry
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                float
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                第一产业增加值(亿元)
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                11575.4
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                        break;
+                        
+                    case '居民消费价格指数':
+                        datasetDescription = `
+                            <p class="text-gray-medium mb-4">
+                                本数据集包含中国居民消费价格指数(CPI)的详细数据，按月度更新。数据内容包括全国及分地区CPI总指数、各类商品和服务价格指数。
+                            </p>
+                            <p class="text-gray-medium mb-4">
+                                数据来源为国家统计局，反映居民家庭购买消费商品及服务的价格水平的变动情况。本数据集可用于通货膨胀分析、货币政策研究、生活成本评估等多种研究和应用场景。
+                            </p>
+                        `;
+                        
+                        datasetPreview = `
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                字段
+                                            </th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                类型
+                                            </th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                描述
+                                            </th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                示例值
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                year
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                integer
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                年份
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                2025
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                month
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                integer
+                                                integer
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                月份
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                5
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                cpi_all
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                float
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                CPI总指数(上年同月=100)
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                101.2
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                food
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                float
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                食品烟酒类价格指数(上年同月=100)
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                102.4
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                        break;
+                        
+                    default:
+                        datasetDescription = `
+                            <p class="text-gray-medium mb-4">
+                                本数据集包含${datasetName}的详细数据，经过严格的质量控制和校验，确保数据的准确性和完整性。
+                            </p>
+                            <p class="text-gray-medium mb-4">
+                                数据来源可靠，可用于多种研究和应用场景。
+                            </p>
+                        `;
+                        
+                        datasetPreview = `
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                字段
+                                            </th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                类型
+                                            </th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                描述
+                                            </th>
+                                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                示例值
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                id
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                integer
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                记录ID
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                1
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                name
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                string
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                名称
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                示例数据
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                value
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                float
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                数值
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                100.5
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-dark">
+                                                date
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                string
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                日期
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-medium">
+                                                2025-01-01
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                }
+                
+                // 更新面包屑导航
+                const breadcrumb = document.querySelector('.flex.text-sm');
+                breadcrumb.innerHTML = `
+                    <a href="index.html" class="text-gray-medium hover:text-primary">首页</a>
+                    <span class="mx-2 text-gray-medium">/</span>
+                    <a href="data-marketplace.html" class="text-gray-medium hover:text-primary">科研数据库</a>
+                    <span class="mx-2 text-gray-medium">/</span>
+                    <a href="#" class="text-gray-medium hover:text-primary">中国宏观经济数据库</a>
+                    <span class="mx-2 text-gray-medium">/</span>
+                    <span class="text-primary font-medium">${datasetName}</span>
+                `;
+                
+                // 更新详情内容
+                datasetContent.innerHTML = `
+                    <!-- 数据集标题和操作 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                            <div>
+                                <h2 class="text-2xl font-bold mb-2">中国${datasetName}数据</h2>
+                                <p class="text-gray-medium">全面覆盖中国${datasetName}的详细信息</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 数据概览卡片 -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="text-sm text-gray-medium mb-1">数据量</div>
+                                <div class="text-2xl font-bold">1,245 条记录</div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="text-sm text-gray-medium mb-1">更新时间</div>
+                                <div class="text-2xl font-bold">2025-06-20</div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="text-sm text-gray-medium mb-1">数据格式</div>
+                                <div class="text-2xl font-bold">CSV / JSON</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 数据集描述 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+                        <h3 class="text-xl font-bold mb-4">数据集描述</h3>
+                        ${datasetDescription}
+                        
+                        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="font-medium mb-2">数据来源</h4>
+                                <p class="text-gray-medium">国家统计局</p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">时间范围</h4>
+                                <p class="text-gray-medium">2010-2025年</p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">数据更新频率</h4>
+                                <p class="text-gray-medium">每年更新</p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">数据大小</h4>
+                                <p class="text-gray-medium">522 MB</p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">研究领域</h4>
+                                <p class="text-gray-medium">经济学；地理学；财政学</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 数据预览 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold">数据预览</h3>
+                            <div class="flex space-x-2">
+                                <button class="bg-white hover:bg-gray-50 text-dark border border-gray-300 font-medium px-3 py-1 rounded-lg transition-all text-sm">
+                                    CSV
+                                </button>
+                                <button class="bg-primary/10 text-primary border border-primary/30 font-medium px-3 py-1 rounded-lg transition-all text-sm">
+                                    表格
+                                </button>
+                                <button class="bg-white hover:bg-gray-50 text-dark border border-gray-300 font-medium px-3 py-1 rounded-lg transition-all text-sm">
+                                    JSON
+                                </button>
+                            </div>
+                        </div>
+                        
+                        ${datasetPreview}
+                        
+                        <div class="mt-6">
+                            <h4 class="font-medium mb-2">使用指南</h4>
+                            <p class="text-gray-medium mb-4">
+                                本数据集可用于多种研究和分析场景。数据格式规范，易于导入各种数据分析工具和数据库系统。
+                            </p>
+                            <p class="text-gray-medium">
+                                数据更新说明：根据数据源的更新频率定期同步，确保数据的时效性和准确性。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- 数据操作 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+                        <h3 class="text-xl font-bold mb-4">数据集操作</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-primary hover:shadow-sm transition-all cursor-pointer">
+                                <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                                    <i class="fa fa-download text-primary text-xl"></i>
+                                </div>
+                                <h4 class="font-medium mb-2">下载数据</h4>
+                                <p class="text-gray-medium text-sm">
+                                    下载完整数据集，支持CSV、JSON等多种格式
+                                </p>
+                            </div>
+                            
+                            <a href="data_analyse.html" target="_blank">
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-primary hover:shadow-sm transition-all cursor-pointer">
+                                <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                                    <i class="fa fa-code text-primary text-xl"></i>
+                                </div>
+                                <h4 class="font-medium mb-2">数据分析</h4>
+                                <p class="text-gray-medium text-sm">
+                                    进入数据分析工具，进行数据实验
+                                </p>
+                            </div>
+                            </a>
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-primary hover:shadow-sm transition-all cursor-pointer">
+                                <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                                    <i class="fa fa-star-o text-primary text-xl"></i>
+                                </div>
+                                <h4 class="font-medium mb-2">收藏数据集</h4>
+                                <p class="text-gray-medium text-sm">
+                                    将数据集添加到收藏夹，方便后续访问
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 相关数据集 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-xl font-bold mb-4">相关数据集</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <a href="#" class="border border-gray-200 rounded-lg p-4 hover:border-primary hover:shadow-sm transition-all flex">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4 shrink-0">
+                                    <i class="fa fa-line-chart text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-1">中国经济增长指标</h4>
+                                    <p class="text-gray-medium text-sm mb-2">
+                                        包含GDP、CPI、PPI等主要经济增长指标的时间序列数据
+                                    </p>
+                                    <div class="flex items-center text-xs text-gray-medium">
+                                        <span class="mr-3"><i class="fa fa-calendar-o mr-1"></i> 2025-06-15</span>
+                                        <span><i class="fa fa-download mr-1"></i> 2,341</span>
+                                    </div>
+                                </div>
+                            </a>
+                            
+                            <a href="#" class="border border-gray-200 rounded-lg p-4 hover:border-primary hover:shadow-sm transition-all flex">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4 shrink-0">
+                                    <i class="fa fa-bank text-green-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-1">财政收支数据</h4>
+                                    <p class="text-gray-medium text-sm mb-2">
+                                        全国及各地区财政收入和支出的详细数据
+                                    </p>
+                                    <div class="flex items-center text-xs text-gray-medium">
+                                        <span class="mr-3"><i class="fa fa-calendar-o mr-1"></i> 2025-06-10</span>
+                                        <span><i class="fa fa-download mr-1"></i> 1,876</span>
+                                    </div>
+                                </div>
+                            </a>
+                            
+                            <a href="#" class="border border-gray-200 rounded-lg p-4 hover:border-primary hover:shadow-sm transition-all flex">
+                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4 shrink-0">
+                                    <i class="fa fa-users text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-1">人口与就业数据</h4>
+                                    <p class="text-gray-medium text-sm mb-2">
+                                        包含人口结构、就业情况、工资水平等相关数据
+                                    </p>
+                                    <div class="flex items-center text-xs text-gray-medium">
+                                        <span class="mr-3"><i class="fa fa-calendar-o mr-1"></i> 2025-06-05</span>
+                                        <span><i class="fa fa-download mr-1"></i> 3,124</span>
+                                    </div>
+                                </div>
+                            </a>
+                            
+                            <a href="#" class="border border-gray-200 rounded-lg p-4 hover:border-primary hover:shadow-sm transition-all flex">
+                                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4 shrink-0">
+                                    <i class="fa fa-building text-orange-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium mb-1">固定资产投资数据</h4>
+                                    <p class="text-gray-medium text-sm mb-2">
+                                        全国及各地区固定资产投资规模、结构和增速数据
+                                    </p>
+                                    <div class="flex items-center text-xs text-gray-medium">
+                                        <span class="mr-3"><i class="fa fa-calendar-o mr-1"></i> 2025-05-30</span>
+                                        <span><i class="fa fa-download mr-1"></i> 1,567</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }, 800);
+        }
+    </script>
+</body>
+</html>

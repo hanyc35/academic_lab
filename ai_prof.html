@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学者库 - AI科研助手</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="tailwind.css"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- 引入Chart.js 用于关系图谱 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  
+  <!-- Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#722ED1', // 紫色作为关系连接线颜色
+            tertiary: '#FF7D00',
+            dark: '#1D2129',
+            'gray-light': '#F2F3F5',
+            'gray-medium': '#C9CDD4',
+            'gray-dark': '#86909C'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .transition-custom {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .card-hover {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(22, 93, 255, 0.1), 0 10px 10px -5px rgba(22, 93, 255, 0.04);
+      }
+      .node-hover {
+        box-shadow: 0 0 0 3px rgba(114, 46, 209, 0.5);
+        transform: scale(1.1);
+        z-index: 10;
+      }
+      .network-container {
+        position: relative;
+        overflow: auto;
+        height: 800px; /* 修改为800px以容纳整个图谱 */
+      }
+      .nav-expanded {
+        width: 16rem;
+      }
+      .nav-collapsed {
+        width: 4rem;
+      }
+      .nav-text-hidden {
+        display: none;
+      }
+    }
+  </style>
+  
+  <style>
+    /* 自定义滚动条 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    /* 平滑滚动 */
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* 关系连接线 */
+    .relation-line {
+      position: absolute;
+      z-index: 0;
+      transition: opacity 0.2s ease;
+    }
+    .relation-coauthor {
+      background-color: #722ED1;
+      opacity: 0.6; /* 增加透明度以便查看 */
+    }
+    .relation-citation {
+      background-color: #165DFF;
+      opacity: 0.5; /* 增加透明度以便查看 */
+    }
+    
+    /* 学者节点 */
+    .scholar-node {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: #fff;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 5;
+    }
+    .scholar-node:hover {
+      transform: scale(1.1);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .scholar-node img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    
+    /* 悬浮信息卡片 */
+    .scholar-tooltip {
+      position: absolute;
+      width: 280px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      padding: 12px;
+      z-index: 100;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .tooltip-arrow {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+    }
+    
+    /* 控制按钮样式 */
+    .control-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: #fff;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .control-btn:hover {
+      background-color: #f0f0f0;
+    }
+    
+    /* 节点标签 */
+    .node-label {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 8px;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .scholar-node:hover .node-label {
+      opacity: 1;
+    }
+    
+    /* 新增：调试用背景 */
+    #networkCanvas {
+      background-color: rgba(242, 243, 245, 0.3);
+      position: relative;
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 text-dark overflow-hidden h-screen flex">
+  <!-- 左侧导航栏 -->
+  <aside id="sidebar" class="nav-collapsed bg-white border-r border-gray-200 flex flex-col h-full shadow-sm z-20 transition-custom">
+    <!-- 品牌标识 -->
+    <div class="h-16 w-full flex items-center justify-center border-b border-gray-200 cursor-pointer" id="toggleSidebar">
+      <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white">
+        <i class="fa fa-robot text-xl"></i>
+      </div>
+      <span class="ml-3 text-lg font-bold text-dark nav-text-hidden">AI科研助手</span>
+    </div>
+    
+    <!-- 导航菜单 -->
+    <nav class="flex-1 w-full py-4 flex flex-col">
+      <a href="AI_research_reading.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-book text-lg"></i>
+        </div>
+        <span class="ml-3 text-gray-dark nav-text-hidden">AI阅读</span>
+      </a>
+      <a href="ai_thinking.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-lightbulb-o text-lg"></i>
+        </div>
+        <span class="ml-3 text-gray-dark nav-text-hidden">AI沉思</span>
+      </a>
+      <a href="ai_papertree.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-sitemap text-lg"></i>
+        </div>
+        <span class="ml-3 text-gray-dark nav-text-hidden">溯源树</span>
+      </a>
+      <a href="ai_prof.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+          <i class="fa fa-users text-lg"></i>
+        </div>
+        <span class="ml-3 text-gray-dark nav-text-hidden">学者库</span>
+      </a>
+      
+      <!-- 分隔线 -->
+      <div class="w-full h-px bg-gray-200 my-4 mx-auto w-11"></div>
+      
+      <!-- 其他功能 -->
+      <a href="#" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-cog text-lg"></i>
+        </div>
+        <span class="ml-3 text-gray-dark nav-text-hidden">设置</span>
+      </a>
+      <a href="#" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-question-circle text-lg"></i>
+        </div>
+        <span class="ml-3 text-gray-dark nav-text-hidden">帮助中心</span>
+      </a>
+    </nav>
+    
+    <!-- 用户信息 -->
+    <div class="w-full p-3 border-t border-gray-200">
+      <div class="w-full flex items-center">
+        <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center cursor-pointer hover-scale">
+          <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-full h-full object-cover">
+        </div>
+        <span class="ml-3 text-gray-dark nav-text-hidden">张教授</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="flex-1 overflow-y-auto bg-gray-light">
+    <!-- 顶部导航栏 -->
+    <header class="h-16 bg-white shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
+      <div class="flex items-center">
+        <h1 class="text-xl font-bold text-dark">学者库</h1>
+        <span class="ml-2 text-gray-dark text-sm">最好用的学术研究大模型助手</span>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        <!-- 搜索框 -->
+        <div class="relative hidden md:block">
+          <input type="text" placeholder="搜索学者..." class="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-custom">
+          <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-dark"></i>
+        </div>
+        
+        <!-- 通知图标 -->
+        <div class="relative cursor-pointer">
+          <i class="fa fa-bell-o text-gray-dark text-lg"></i>
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">3</span>
+        </div>
+        
+        <!-- 主题切换 -->
+        <button class="w-10 h-10 rounded-full bg-gray-light flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-custom">
+          <i class="fa fa-moon-o text-gray-dark"></i>
+        </button>
+      </div>
+    </header>
+    
+    <!-- 功能介绍卡片 -->
+    <section class="px-6 py-8">
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-dark mb-2">学者关系网络图谱</h2>
+            <p class="text-gray-dark max-w-2xl">
+              可视化展示学者之间的合作关系与引用关系，紫色连线表示合作关系，蓝色连线表示引用关系
+            </p>
+          </div>
+          <div class="mt-4 md:mt-0 flex space-x-3">
+            <button id="resetNetwork" class="bg-gray-100 hover:bg-gray-200 text-gray-dark px-4 py-2 rounded-lg shadow-sm transition-custom flex items-center">
+              <i class="fa fa-refresh mr-2"></i>
+              <span>重置图谱</span>
+            </button>
+            <button id="downloadNetwork" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg shadow-md transition-custom flex items-center btn-ripple">
+              <i class="fa fa-download mr-2"></i>
+              <span>导出图谱</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 图例说明 -->
+        <div class="flex flex-wrap gap-4 mb-6">
+          <div class="flex items-center">
+            <div class="w-4 h-4 bg-secondary opacity-60 mr-2 rounded"></div>
+            <span class="text-sm text-gray-dark">合作关系</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-4 h-4 bg-primary opacity-50 mr-2 rounded"></div>
+            <span class="text-sm text-gray-dark">引用关系</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-4 h-4 bg-tertiary mr-2 rounded"></div>
+            <span class="text-sm text-gray-dark">高影响力学者</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 网络图谱容器 -->
+      <div class="bg-white rounded-xl shadow-sm p-4 mb-8 relative">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-dark">学者关系网络</h3>
+          <div class="flex space-x-2">
+            <div class="control-btn" id="zoomIn">
+              <i class="fa fa-search-plus"></i>
+            </div>
+            <div class="control-btn" id="zoomOut">
+              <i class="fa fa-search-minus"></i>
+            </div>
+            <div class="control-btn" id="panMode">
+              <i class="fa fa-hand-paper-o"></i>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 图谱控制层 -->
+        <div class="network-container">
+          <div id="networkCanvas" style="width: 1200px; height: 800px; position: relative; margin: 0 auto;">
+            <!-- 关系连接线和学者节点将通过JS动态生成 -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- 学者详情面板 -->
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <h3 class="text-xl font-bold text-dark mb-4">学者详情</h3>
+        <div id="scholarDetails" class="p-4 border border-gray-200 rounded-lg">
+          <p class="text-gray-dark text-center py-8">请在图谱中点击学者节点查看详情</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 悬浮信息卡片模板 -->
+  <div id="tooltipTemplate" class="scholar-tooltip hidden">
+    <div class="tooltip-arrow" style="border-bottom: 8px solid #fff;"></div>
+    <div class="flex items-center mb-3">
+      <img id="tooltipAvatar" src="" alt="学者头像" class="w-12 h-12 rounded-full mr-3">
+      <div>
+        <h4 id="tooltipName" class="font-bold text-lg"></h4>
+        <p id="tooltipPosition" class="text-gray-dark text-sm"></p>
+      </div>
+    </div>
+    <div class="mb-3">
+      <p id="tooltipAffiliation" class="text-sm"></p>
+    </div>
+    <div class="flex justify-between text-xs text-gray-dark mb-3">
+      <div>
+        <span class="font-medium">H指数:</span> <span id="tooltipHIndex"></span>
+      </div>
+      <div>
+        <span class="font-medium">论文数:</span> <span id="tooltipPublications"></span>
+      </div>
+      <div>
+        <span class="font-medium">引用数:</span> <span id="tooltipCitations"></span>
+      </div>
+    </div>
+    <div>
+      <p class="text-xs font-medium mb-1">研究领域:</p>
+      <div id="tooltipResearchAreas" class="flex flex-wrap gap-1"></div>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      // 学者数据
+      const scholars = [
+        { id: 1, name: '李教授', position: '教授', affiliation: '清华大学经济管理学院', hIndex: 65, publications: 120, citations: 15000, researchAreas: ['宏观经济学', '金融市场'], avatar: 'profile1.webp', x: 300, y: 200, isHighImpact: true },
+        { id: 2, name: '王教授', position: '副教授', affiliation: '北京大学光华管理学院', hIndex: 58, publications: 95, citations: 12000, researchAreas: ['微观经济学', '产业组织'], avatar: 'profile2.webp', x: 500, y: 250, isHighImpact: true },
+        { id: 3, name: '张教授', position: '教授', affiliation: '上海财经大学金融学院', hIndex: 52, publications: 80, citations: 9800, researchAreas: ['金融工程', '风险管理'], avatar: 'profile3.webp', x: 400, y: 400 },
+        { id: 4, name: '刘教授', position: '助理教授', affiliation: '复旦大学经济学院', hIndex: 45, publications: 60, citations: 7500, researchAreas: ['国际经济学', '贸易政策'], avatar: 'profile4.jpeg', x: 250, y: 500 },
+        { id: 5, name: '陈教授', position: '教授', affiliation: '中国人民大学财政金融学院', hIndex: 59, publications: 105, citations: 11000, researchAreas: ['财政学', '税收政策'], avatar: 'profile5.webp', x: 600, y: 450 },
+        { id: 6, name: '赵教授', position: '副教授', affiliation: '南开大学经济学院', hIndex: 48, publications: 70, citations: 8200, researchAreas: ['计量经济学', '劳动经济学'], avatar: 'profile6.webp', x: 550, y: 600 },
+        { id: 7, name: '周教授', position: '教授', affiliation: '浙江大学管理学院', hIndex: 54, publications: 85, citations: 9200, researchAreas: ['市场营销', '电子商务'], avatar: 'profile7.webp', x: 350, y: 650 },
+        { id: 8, name: '吴教授', position: '副教授', affiliation: '武汉大学经济与管理学院', hIndex: 42, publications: 55, citations: 6800, researchAreas: ['发展经济学', '农业经济学'], avatar: 'profile1.webp', x: 150, y: 400 },
+        { id: 9, name: '郑教授', position: '助理教授', affiliation: '厦门大学经济学院', hIndex: 39, publications: 48, citations: 5500, researchAreas: ['金融经济学', '公司金融'], avatar: 'profile2.webp', x: 700, y: 350 },
+        { id: 10, name: '孙教授', position: '教授', affiliation: '中山大学岭南学院', hIndex: 51, publications: 78, citations: 8900, researchAreas: ['区域经济学', '城市经济学'], avatar: 'profile3.webp', x: 800, y: 450 },
+      ];
+      
+      // 关系数据
+      const relationships = [
+        { source: 1, target: 2, type: 'coauthor' },
+        { source: 1, target: 3, type: 'citation' },
+        { source: 2, target: 3, type: 'coauthor' },
+        { source: 2, target: 5, type: 'citation' },
+        { source: 3, target: 4, type: 'coauthor' },
+        { source: 3, target: 5, type: 'coauthor' },
+        { source: 4, target: 1, type: 'citation' },
+        { source: 4, target: 7, type: 'coauthor' },
+        { source: 5, target: 6, type: 'citation' },
+        { source: 6, target: 7, type: 'coauthor' },
+        { source: 7, target: 8, type: 'citation' },
+        { source: 8, target: 1, type: 'coauthor' },
+        { source: 8, target: 9, type: 'citation' },
+        { source: 9, target: 3, type: 'coauthor' },
+        { source: 9, target: 10, type: 'citation' },
+        { source: 10, target: 2, type: 'coauthor' },
+        { source: 10, target: 5, type: 'citation' },
+      ];
+      
+      // DOM元素
+      const canvas = document.getElementById('networkCanvas');
+      const tooltipTemplate = document.getElementById('tooltipTemplate');
+      const sidebar = document.getElementById('sidebar');
+      const toggleSidebar = document.getElementById('toggleSidebar');
+      const resetNetwork = document.getElementById('resetNetwork');
+      const zoomIn = document.getElementById('zoomIn');
+      const zoomOut = document.getElementById('zoomOut');
+      const panMode = document.getElementById('panMode');
+      const scholarDetails = document.getElementById('scholarDetails');
+      
+      // 状态变量
+      let isSidebarExpanded = false;
+      let isPanning = false;
+      let scale = 1;
+      let offsetX = 0;
+      let offsetY = 0;
+      let lastX, lastY;
+      
+      // 初始化侧边栏
+      function initSidebar() {
+        toggleSidebar.addEventListener('click', () => {
+          isSidebarExpanded = !isSidebarExpanded;
+          updateSidebar();
+        });
+      }
+      
+      // 更新侧边栏状态
+      function updateSidebar() {
+        const navTexts = document.querySelectorAll('.nav-text-hidden');
+        if (isSidebarExpanded) {
+          sidebar.classList.remove('nav-collapsed');
+          sidebar.classList.add('nav-expanded');
+          navTexts.forEach(text => text.classList.remove('nav-text-hidden'));
+        } else {
+          sidebar.classList.remove('nav-expanded');
+          sidebar.classList.add('nav-collapsed');
+          setTimeout(() => {
+            navTexts.forEach(text => text.classList.add('nav-text-hidden'));
+          }, 200);
+        }
+      }
+      
+      // 初始化网络图谱
+      function initNetwork() {
+        // 清除任何现有内容
+        canvas.innerHTML = '';
+        
+        // 绘制关系线
+        relationships.forEach(relation => {
+          const source = scholars.find(s => s.id === relation.source);
+          const target = scholars.find(s => s.id === relation.target);
+          
+          if (source && target) {
+            const line = document.createElement('div');
+            line.className = `relation-line ${relation.type === 'coauthor' ? 'relation-coauthor' : 'relation-citation'}`;
+            
+            // 计算连接线位置和长度
+            const dx = target.x - source.x;
+            const dy = target.y - source.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            line.style.width = `${length}px`;
+            line.style.height = '2px';
+            line.style.left = `${source.x}px`;
+            line.style.top = `${source.y}px`;
+            line.style.transformOrigin = '0 50%';
+            line.style.transform = `rotate(${angle}deg)`;
+            
+            canvas.appendChild(line);
+          }
+        });
+        
+        // 绘制学者节点
+        scholars.forEach(scholar => {
+          const node = document.createElement('div');
+          node.className = `scholar-node ${scholar.isHighImpact ? 'border-2 border-tertiary' : ''}`;
+          node.style.left = `${scholar.x}px`;
+          node.style.top = `${scholar.y}px`;
+          node.dataset.id = scholar.id;
+          
+          const img = document.createElement('img');
+          img.src = scholar.avatar;
+          img.alt = `${scholar.name}头像`;
+          
+          const label = document.createElement('div');
+          label.className = 'node-label';
+          label.textContent = scholar.name;
+          
+          node.appendChild(img);
+          node.appendChild(label);
+          canvas.appendChild(node);
+          
+          // 添加鼠标事件
+          node.addEventListener('mouseenter', (e) => showTooltip(e, scholar));
+          node.addEventListener('mouseleave', hideTooltip);
+          node.addEventListener('click', () => showScholarDetails(scholar));
+        });
+        
+        // 克隆tooltip并添加到文档中
+        const tooltip = tooltipTemplate.cloneNode(true);
+        tooltip.id = 'tooltip';
+        tooltip.classList.remove('hidden');
+        document.body.appendChild(tooltip);
+      }
+      
+      // 显示悬浮信息
+      function showTooltip(event, scholar) {
+        const tooltip = document.getElementById('tooltip');
+        const arrow = tooltip.querySelector('.tooltip-arrow');
+        
+        // 设置tooltip内容
+        document.getElementById('tooltipAvatar').src = scholar.avatar;
+        document.getElementById('tooltipName').textContent = scholar.name;
+        document.getElementById('tooltipPosition').textContent = scholar.position;
+        document.getElementById('tooltipAffiliation').textContent = scholar.affiliation;
+        document.getElementById('tooltipHIndex').textContent = scholar.hIndex;
+        document.getElementById('tooltipPublications').textContent = scholar.publications;
+        document.getElementById('tooltipCitations').textContent = scholar.citations;
+        
+        // 清空并添加研究领域标签
+        const researchAreasContainer = document.getElementById('tooltipResearchAreas');
+        researchAreasContainer.innerHTML = '';
+        scholar.researchAreas.forEach(area => {
+          const tag = document.createElement('span');
+          tag.className = 'px-2 py-1 bg-primary/10 text-primary text-xs rounded-full';
+          tag.textContent = area;
+          researchAreasContainer.appendChild(tag);
+        });
+        
+        // 定位tooltip
+        const nodeRect = event.currentTarget.getBoundingClientRect();
+        const tooltipWidth = tooltip.offsetWidth;
+        const tooltipHeight = tooltip.offsetHeight;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        let left, top;
+        
+        // 水平位置 - 优先显示在右侧，空间不足时显示在左侧
+        if (nodeRect.right + tooltipWidth < viewportWidth) {
+          left = nodeRect.right + 10;
+          arrow.style.left = '-8px';
+          arrow.style.top = '20px';
+          arrow.style.borderRight = '8px solid #fff';
+          arrow.style.borderBottom = '8px solid transparent';
+          arrow.style.borderLeft = 'none';
+        } else {
+          left = nodeRect.left - tooltipWidth - 10;
+          arrow.style.left = 'auto';
+          arrow.style.right = '-8px';
+          arrow.style.top = '20px';
+          arrow.style.borderLeft = '8px solid #fff';
+          arrow.style.borderBottom = '8px solid transparent';
+          arrow.style.borderRight = 'none';
+        }
+        
+        // 垂直位置 - 居中对齐
+        top = nodeRect.top + (nodeRect.height - tooltipHeight) / 2;
+        
+        // 确保tooltip不会超出视口顶部
+        if (top < 10) {
+          top = 10;
+        }
+        
+        // 确保tooltip不会超出视口底部
+        if (top + tooltipHeight > viewportHeight) {
+          top = viewportHeight - tooltipHeight - 10;
+        }
+        
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+        tooltip.style.display = 'block';
+      }
+      
+      // 隐藏悬浮信息
+      function hideTooltip() {
+        const tooltip = document.getElementById('tooltip');
+        tooltip.style.display = 'none';
+      }
+      
+      // 显示学者详情
+      function showScholarDetails(scholar) {
+        // 构建详情HTML
+        const detailsHTML = `
+          <div class="flex items-start">
+            <img src="${scholar.avatar}" alt="${scholar.name}头像" class="w-16 h-16 rounded-full mr-4">
+            <div>
+              <h4 class="font-bold text-xl mb-1">${scholar.name}</h4>
+              <p class="text-gray-dark mb-2">${scholar.position} · ${scholar.affiliation}</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                ${scholar.researchAreas.map(area => `
+                  <span class="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full">${area}</span>
+                `).join('')}
+              </div>
+              <div class="grid grid-cols-3 gap-4 text-center text-sm">
+                <div class="p-2 bg-gray-50 rounded-lg">
+                  <div class="font-bold text-dark">${scholar.hIndex}</div>
+                  <div class="text-gray-dark">H指数</div>
+                </div>
+                <div class="p-2 bg-gray-50 rounded-lg">
+                  <div class="font-bold text-dark">${scholar.publications}</div>
+                  <div class="text-gray-dark">论文数</div>
+                </div>
+                <div class="p-2 bg-gray-50 rounded-lg">
+                  <div class="font-bold text-dark">${scholar.citations}</div>
+                  <div class="text-gray-dark">引用数</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-6">
+            <h5 class="font-semibold text-lg mb-3">近期论文</h5>
+            <ul class="space-y-3">
+              <li class="flex items-start p-3 bg-gray-50 rounded-lg">
+                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-3">
+                  <i class="fa fa-file-text"></i>
+                </div>
+                <div>
+                  <p class="font-medium">基于深度学习的宏观经济预测模型</p>
+                  <p class="text-gray-dark text-sm mt-1">《经济研究》2023年 第5期</p>
+                </div>
+              </li>
+              <li class="flex items-start p-3 bg-gray-50 rounded-lg">
+                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-3">
+                  <i class="fa fa-file-text"></i>
+                </div>
+                <div>
+                  <p class="font-medium">金融市场波动性研究的新方法</p>
+                  <p class="text-gray-dark text-sm mt-1">《金融研究》2023年 第3期</p>
+                </div>
+              </li>
+              <li class="flex items-start p-3 bg-gray-50 rounded-lg">
+                <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-3">
+                  <i class="fa fa-file-text"></i>
+                </div>
+                <div>
+                  <p class="font-medium">数字经济对传统产业的影响分析</p>
+                  <p class="text-gray-dark text-sm mt-1">《中国工业经济》2023年 第2期</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        `;
+        scholarDetails.innerHTML = detailsHTML;
+      }
+      
+      // 初始化侧边栏和网络图谱
+      initSidebar();
+      initNetwork();
+      
+      // 添加重置图谱功能
+      resetNetwork.addEventListener('click', () => {
+        initNetwork();
+      });
+    }
+  </script>
+</body>
+</html>

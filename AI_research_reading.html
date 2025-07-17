@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI科研助手</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="tailwind.css"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#FF7D00',
+            tertiary: '#00B42A',
+            dark: '#1D2129',
+            'gray-light': '#F2F3F5',
+            'gray-medium': '#C9CDD4',
+            'gray-dark': '#86909C'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .transition-custom {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .hover-scale {
+        transition: transform 0.2s ease-in-out;
+      }
+      .hover-scale:hover {
+        transform: scale(1.02);
+      }
+      .nav-expand {
+        width: 16rem;
+      }
+      .nav-item-text {
+        opacity: 0;
+        transform: translateX(-10px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      .nav-expanded .nav-item-text {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      .nav-logo-text {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      .nav-expanded .nav-logo-text {
+        opacity: 1;
+      }
+    }
+  </style>
+  
+  <style>
+    /* 滚动条美化 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    /* 平滑滚动 */
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* 自定义动画 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fade-in {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+    
+    /* 上传区域动画 */
+    .upload-area {
+      transition: all 0.3s ease;
+    }
+    .upload-area:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px -5px rgba(22, 93, 255, 0.1), 0 10px 10px -5px rgba(22, 93, 255, 0.04);
+    }
+    
+    /* 按钮波纹效果 */
+    .btn-ripple {
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-ripple:after {
+      content: "";
+      display: block;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+      background-repeat: no-repeat;
+      background-position: 50%;
+      transform: scale(10, 10);
+      opacity: 0;
+      transition: transform .5s, opacity 1s;
+    }
+    .btn-ripple:active:after {
+      transform: scale(0, 0);
+      opacity: .3;
+      transition: 0s;
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 text-dark overflow-hidden h-screen flex">
+  <!-- 左侧导航栏 -->
+  <aside id="sidebar" class="w-16 bg-white border-r border-gray-200 flex flex-col h-full shadow-sm z-20 transition-custom">
+    <!-- 品牌标识 -->
+    <div class="h-16 w-full flex items-center justify-center border-b border-gray-200">
+      <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white">
+        <i class="fa fa-robot text-xl"></i>
+      </div>
+      <span class="nav-logo-text ml-3 text-lg font-bold text-dark">AI科研助手</span>
+    </div>
+    
+    <!-- 导航菜单 -->
+    <nav class="flex-1 w-full py-4 flex flex-col">
+      <a href="AI_research_reading.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+          <i class="fa fa-book text-lg"></i>
+        </div>
+
+        <span class="nav-item-text ml-3 text-gray-dark">AI阅读</span>
+      </a>
+      <a href="ai_thinking.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-lightbulb-o text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">AI沉思</span>
+      </a>
+      <a href="ai_papertree.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-sitemap text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">溯源树</span>
+      </a>
+      <a href="ai_prof.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-users text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">学者库</span>
+      </a>
+      
+      <!-- 分隔线 -->
+      <div class="w-full h-px bg-gray-200 my-4 mx-auto w-11"></div>
+      
+      <!-- 其他功能 -->
+      <a href="#" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-cog text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">设置</span>
+      </a>
+      <a href="#" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-question-circle text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">帮助中心</span>
+      </a>
+    </nav>
+    
+    <!-- 用户信息 -->
+    <div class="w-full p-3 border-t border-gray-200">
+      <div class="w-full flex items-center">
+        <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center cursor-pointer hover-scale">
+          <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-full h-full object-cover">
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">张教授</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="flex-1 overflow-y-auto bg-gray-light">
+    <!-- 顶部导航栏 -->
+    <header class="h-16 bg-white shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
+      <div class="flex items-center">
+        <h1 class="text-xl font-bold text-dark">AI科研助手</h1>
+        <span class="ml-2 text-gray-dark text-sm">最好用的学术研究大模型助手</span>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        <!-- 搜索框 -->
+        <div class="relative hidden md:block">
+          <input type="text" placeholder="搜索论文..." class="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-custom">
+          <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-dark"></i>
+        </div>
+        
+        <!-- 通知图标 -->
+        <div class="relative cursor-pointer">
+          <i class="fa fa-bell-o text-gray-dark text-lg"></i>
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">3</span>
+        </div>
+        
+        <!-- 主题切换 -->
+        <button class="w-10 h-10 rounded-full bg-gray-light flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-custom">
+          <i class="fa fa-moon-o text-gray-dark"></i>
+        </button>
+      </div>
+    </header>
+    
+    <!-- 功能介绍卡片 -->
+    <section class="px-6 py-8">
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-8 animate-fade-in">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-dark mb-2">AI阅读</h2>
+            <p class="text-gray-dark max-w-2xl">
+              帮您快速解读论文，进行多语言翻译，对论文中文本、图片、公式高精准解读与问答
+            </p>
+          </div>
+          <div class="mt-4 md:mt-0">
+            <button class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg shadow-md transition-custom flex items-center btn-ripple">
+              <i class="fa fa-rocket mr-2"></i>
+              <span>开始使用</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 功能卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- AI阅读 -->
+          <div class="bg-white border border-gray-200 rounded-lg p-5 hover-scale">
+            <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
+              <i class="fa fa-language text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">多语言翻译</h3>
+            <p class="text-gray-dark text-sm">
+             支持中英日韩等多种语言的学术论文翻译，保持专业术语的准确性，帮助您跨越语言障碍。
+            </p>
+          </div>
+          
+          <!-- AI沉思 -->
+          <div class="bg-white border border-gray-200 rounded-lg p-5 hover-scale">
+            <div class="w-12 h-12 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center mb-4">
+              <i class="fa fa-picture-o text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">图片与公式解析
+</h3>
+            <p class="text-gray-dark text-sm">
+              智能识别论文中的图表和公式，提供详细解读，帮助您理解复杂的研究数据和数学表达。
+
+
+            </p>
+          </div>
+          
+          <!-- 溯源树 -->
+          <div class="bg-white border border-gray-200 rounded-lg p-5 hover-scale">
+            <div class="w-12 h-12 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center mb-4">
+              <i class="fa fa-comments-o text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">智能问答</h3>
+            <p class="text-gray-dark text-sm">
+              基于论文内容进行交互式问答，帮助您快速获取关键信息，理解论文核心观点和研究发现。
+            </p>
+          </div>
+          
+          <!-- 学者库 -->
+          <div class="bg-white border border-gray-200 rounded-lg p-5 hover-scale">
+            <div class="w-12 h-12 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center mb-4">
+              <i class="fa fa-line-chart text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">数据分析</h3>
+            <p class="text-gray-dark text-sm">
+              对论文中的数据进行统计分析，生成可视化图表，帮助您更好地理解和解释研究结果。
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 上传区域 -->
+      <div class="bg-white rounded-xl shadow-sm p-8 mb-8 upload-area animate-fade-in" style="animation-delay: 0.1s;">
+        <div class="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center">
+          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+            <i class="fa fa-cloud-upload text-primary text-3xl"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">上传论文进行分析</h3>
+          <p class="text-gray-dark mb-6 max-w-lg mx-auto">
+            支持PDF、Word等格式的学术论文，AI将帮助您快速解读论文内容
+          </p>
+          
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <label class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg shadow-md transition-custom cursor-pointer flex items-center btn-ripple">
+              <i class="fa fa-file-pdf-o mr-2"></i>
+              <span>上传论文</span>
+              <input type="file" accept=".pdf,.docx,.doc" class="hidden">
+            </label>
+            
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-dark px-6 py-3 rounded-lg shadow-sm transition-custom flex items-center">
+              <i class="fa fa-folder-open-o mr-2"></i>
+              <span>从历史记录打开</span>
+            </button>
+          </div>
+          
+          <p class="text-xs text-gray-dark mt-6">
+            支持格式：PDF, DOCX, DOC | 最大文件大小：50MB
+          </p>
+        </div>
+      </div>
+
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-6 px-6">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p class="text-gray-dark text-sm">© 2025 AI科研助手. 保留所有权利.</p>
+        </div>
+        <div class="flex space-x-6">
+          <a href="#" class="text-gray-dark hover:text-primary transition-custom">
+            <i class="fa fa-github text-lg"></i>
+          </a>
+          <a href="#" class="text-gray-dark hover:text-primary transition-custom">
+            <i class="fa fa-twitter text-lg"></i>
+          </a>
+          <a href="#" class="text-gray-dark hover:text-primary transition-custom">
+            <i class="fa fa-linkedin text-lg"></i>
+          </a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- JavaScript -->
+  <script>
+// 侧边栏展开/收起
+const sidebar = document.getElementById('sidebar');
+
+sidebar.addEventListener('mouseenter', () => {
+  sidebar.classList.add('nav-expand', 'nav-expanded');
+});
+
+sidebar.addEventListener('mouseleave', () => {
+  sidebar.classList.remove('nav-expand', 'nav-expanded');
+});
+
+// 导航菜单交互
+document.querySelectorAll('aside nav a').forEach(link => {
+  link.addEventListener('click', function(e) {
+    const href = this.getAttribute('href');
+    
+    // 处理锚点链接（以#开头）
+    if (href.startsWith('#') && href !== '#') {
+      e.preventDefault();
+      
+      // 移除所有激活状态
+      document.querySelectorAll('aside nav a').forEach(el => {
+        el.querySelector('div').classList.remove('bg-primary/10', 'text-primary');
+        el.querySelector('div').classList.add('text-gray-dark');
+      });
+      
+      // 添加当前激活状态
+      this.querySelector('div').classList.remove('text-gray-dark');
+      this.querySelector('div').classList.add('bg-primary/10', 'text-primary');
+      
+      // 平滑滚动到对应部分
+      const targetId = this.getAttribute('href');
+      if (targetId) {
+        document.querySelector(targetId).scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    // 其他链接（普通URL）让浏览器执行默认跳转行为
+  });
+});
+    
+    // 文件上传按钮交互
+    document.querySelectorAll('input[type="file"]').forEach(input => {
+      input.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+          // 这里可以添加文件上传处理逻辑
+          const fileName = this.files[0].name;
+          alert(`已选择文件: ${fileName}`);
+          
+          // 模拟上传成功后跳转到分析页面（实际项目中需要实现真实的上传和处理逻辑）
+          window.location.href = '#analysis';
+        }
+      });
+    });
+    
+    // 通知图标点击效果
+    document.querySelector('.fa-bell-o').parentElement.addEventListener('click', function() {
+      // 这里可以添加通知面板显示逻辑
+      alert('显示通知面板');
+    });
+    
+    // 主题切换按钮
+    document.querySelector('.fa-moon-o').parentElement.addEventListener('click', function() {
+      // 这里可以添加主题切换逻辑
+      const icon = this.querySelector('i');
+      if (icon.classList.contains('fa-moon-o')) {
+        icon.classList.remove('fa-moon-o');
+        icon.classList.add('fa-sun-o');
+        // 切换到深色模式的代码
+        document.body.classList.add('dark-mode');
+      } else {
+        icon.classList.remove('fa-sun-o');
+        icon.classList.add('fa-moon-o');
+        // 切换到浅色模式的代码
+        document.body.classList.remove('dark-mode');
+      }
+    });
+  </script>
+</body>
+</html>

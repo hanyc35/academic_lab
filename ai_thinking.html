@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI科研助手 - AI沉思</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="tailwind.css"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#FF7D00',
+            tertiary: '#00B42A',
+            dark: '#1D2129',
+            'gray-light': '#F2F3F5',
+            'gray-medium': '#C9CDD4',
+            'gray-dark': '#86909C'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .transition-custom {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .card-hover {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(22, 93, 255, 0.1), 0 10px 10px -5px rgba(22, 93, 255, 0.04);
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .nav-expand {
+        width: 16rem;
+      }
+      .nav-item-text {
+        opacity: 0;
+        transform: translateX(-10px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      .nav-expanded .nav-item-text {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      .nav-logo-text {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      .nav-expanded .nav-logo-text {
+        opacity: 1;
+      }
+    }
+  </style>
+  
+  <style>
+    /* 自定义滚动条 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    /* 平滑滚动 */
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* 加载动画 */
+    .loader {
+      border-top-color: #165DFF;
+      animation: spinner 0.6s linear infinite;
+    }
+    @keyframes spinner {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 文本输入框动画 */
+    .input-focus {
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .input-focus:focus {
+      border-color: #165DFF;
+      box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.2);
+    }
+    
+    /* 标签页动画 */
+    .tab-active {
+      position: relative;
+    }
+    .tab-active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: #165DFF;
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 text-dark overflow-hidden h-screen flex">
+  <!-- 左侧导航栏 -->
+  <aside id="sidebar" class="w-16 bg-white border-r border-gray-200 flex flex-col h-full shadow-sm z-20 transition-custom">
+    <!-- 品牌标识 -->
+    <div class="h-16 w-full flex items-center justify-center border-b border-gray-200">
+      <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white">
+        <i class="fa fa-robot text-xl"></i>
+      </div>
+      <span class="nav-logo-text ml-3 text-lg font-bold text-dark">AI科研助手</span>
+    </div>
+    
+    <!-- 导航菜单 -->
+    <nav class="flex-1 w-full py-4 flex flex-col">
+      <a href="AI_research_reading.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-book text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">AI阅读</span>
+      </a>
+      <a href="ai_thinking.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+          <i class="fa fa-lightbulb-o text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">AI沉思</span>
+      </a>
+      <a href="ai_papertree.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-sitemap text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">溯源树</span>
+      </a>
+      <a href="ai_prof.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-users text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">学者库</span>
+      </a>
+      
+      <!-- 分隔线 -->
+      <div class="w-full h-px bg-gray-200 my-4 mx-auto w-11"></div>
+      
+      <!-- 其他功能 -->
+      <a href="#" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-cog text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">设置</span>
+      </a>
+      <a href="#" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-question-circle text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">帮助中心</span>
+      </a>
+    </nav>
+    
+    <!-- 用户信息 -->
+    <div class="w-full p-3 border-t border-gray-200">
+      <div class="w-full flex items-center">
+        <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center cursor-pointer hover-scale">
+          <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-full h-full object-cover">
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">张教授</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="flex-1 overflow-y-auto bg-gray-light">
+    <!-- 顶部导航栏 -->
+    <header class="h-16 bg-white shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
+      <div class="flex items-center">
+        <h1 class="text-xl font-bold text-dark">AI科研助手</h1>
+        <span class="ml-2 text-gray-dark text-sm">最好用的学术研究大模型助手</span>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        <!-- 搜索框 -->
+        <div class="relative hidden md:block">
+          <input type="text" placeholder="搜索历史调研..." class="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-200 input-focus">
+          <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-dark"></i>
+        </div>
+        
+        <!-- 通知图标 -->
+        <div class="relative cursor-pointer">
+          <i class="fa fa-bell-o text-gray-dark text-lg"></i>
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">3</span>
+        </div>
+        
+        <!-- 主题切换 -->
+        <button class="w-10 h-10 rounded-full bg-gray-light flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-custom">
+          <i class="fa fa-moon-o text-gray-dark"></i>
+        </button>
+      </div>
+    </header>
+    
+    <!-- 功能介绍卡片 -->
+    <section class="px-6 py-8">
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-dark mb-2">AI沉思 - 专业问题调研助手</h2>
+            <p class="text-gray-dark max-w-2xl">
+              AI帮助您调研专业问题，生成结构化研究报告，支持多领域学术分析与数据整合
+            </p>
+          </div>
+          <div class="mt-4 md:mt-0">
+            <button class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg shadow-md transition-custom flex items-center btn-ripple">
+              <i class="fa fa-rocket mr-2"></i>
+              <span>开始新调研</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 功能特点 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white border border-gray-200 rounded-lg p-5 card-hover">
+            <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
+              <i class="fa fa-search text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">学术文献检索</h3>
+            <p class="text-gray-dark text-sm">
+              自动检索Web of Science、Google Scholar等学术数据库，获取最新研究成果
+            </p>
+          </div>
+          
+          <div class="bg-white border border-gray-200 rounded-lg p-5 card-hover">
+            <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
+              <i class="fa fa-file-text-o text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">报告自动生成</h3>
+            <p class="text-gray-dark text-sm">
+              基于调研结果生成结构化研究报告，包含摘要、方法、结果和讨论等部分
+            </p>
+          </div>
+          
+          <div class="bg-white border border-gray-200 rounded-lg p-5 card-hover">
+            <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
+              <i class="fa fa-bar-chart text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">数据可视化</h3>
+            <p class="text-gray-dark text-sm">
+              将调研数据转化为图表和图形，支持折线图、柱状图、热力图等多种可视化形式
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 调研输入区 -->
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <h3 class="text-xl font-semibold mb-6">提出您的研究问题</h3>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- 问题输入 -->
+          <div class="lg:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">研究问题描述</label>
+            <textarea 
+              class="w-full h-40 p-3 border border-gray-200 rounded-lg input-focus" 
+              placeholder="请详细描述您想要调研的学术问题，例如：'数字经济对区域创新能力的影响机制研究'"
+            ></textarea>
+            <p class="text-xs text-gray-dark mt-1">
+              越详细的问题描述将帮助AI更精准地理解您的研究需求
+            </p>
+          </div>
+          
+          <!-- 参数设置 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">调研参数</label>
+            <div class="bg-gray-50 p-4 rounded-lg h-full">
+              <div class="mb-4">
+                <label class="block text-xs text-gray-dark mb-1">文献时间范围</label>
+                <select class="w-full p-2 border border-gray-200 rounded-lg input-focus">
+                  <option>最近5年</option>
+                  <option>最近10年</option>
+                  <option>最近15年</option>
+                  <option>全部年份</option>
+                </select>
+              </div>
+              
+              <div class="mb-4">
+                <label class="block text-xs text-gray-dark mb-1">文献数量</label>
+                <select class="w-full p-2 border border-gray-200 rounded-lg input-focus">
+                  <option>10-20篇</option>
+                  <option>20-50篇</option>
+                  <option>50-100篇</option>
+                  <option>100篇以上</option>
+                </select>
+              </div>
+              
+              <div class="mb-4">
+                <label class="block text-xs text-gray-dark mb-1">学科领域</label>
+                <select class="w-full p-2 border border-gray-200 rounded-lg input-focus">
+                  <option>经济学</option>
+                  <option>管理学</option>
+                  <option>计算机科学</option>
+                  <option>物理学</option>
+                  <option>生物学</option>
+                  <option>其他</option>
+                </select>
+              </div>
+              
+              <div class="mt-6">
+                <button class="w-full bg-primary hover:bg-primary/90 text-white py-2 rounded-lg shadow-md transition-custom flex items-center justify-center btn-ripple">
+                  <i class="fa fa-search mr-2"></i>
+                  <span>开始调研</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 最近调研历史 -->
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold">最近调研历史</h3>
+          <a href="#" class="text-primary text-sm hover:underline">查看全部</a>
+        </div>
+        
+        <div class="space-y-4">
+          <!-- 历史记录1 -->
+          <div class="border border-gray-200 rounded-lg overflow-hidden card-hover">
+            <div class="p-4">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-semibold">数字经济对区域创新能力的影响机制研究</h4>
+                <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">已完成</span>
+              </div>
+              <p class="text-gray-dark text-sm mb-3">
+                分析数字经济发展水平对区域创新能力的影响路径，基于2015-2023年36个国家的面板数据
+              </p>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-gray-dark">2023-06-15</span>
+                <div class="flex space-x-2">
+                  <button class="text-xs text-primary hover:text-primary/80">
+                    <i class="fa fa-file-pdf-o mr-1"></i> 下载报告
+                  </button>
+                  <button class="text-xs text-gray-dark hover:text-gray-600">
+                    <i class="fa fa-refresh mr-1"></i> 重新分析
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 历史记录2 -->
+          <div class="border border-gray-200 rounded-lg overflow-hidden card-hover">
+            <div class="p-4">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-semibold">人工智能在医学影像诊断中的应用进展</h4>
+                <span class="text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded">处理中</span>
+              </div>
+              <p class="text-gray-dark text-sm mb-3">
+                综述人工智能技术在医学影像诊断领域的最新研究进展、应用案例及未来发展趋势
+              </p>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-gray-dark">2023-06-12</span>
+                <div class="flex space-x-2">
+                  <button class="text-xs text-primary hover:text-primary/80">
+                    <i class="fa fa-eye mr-1"></i> 查看详情
+                  </button>
+                  <button class="text-xs text-gray-dark hover:text-gray-600">
+                    <i class="fa fa-times mr-1"></i> 取消
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 历史记录3 -->
+          <div class="border border-gray-200 rounded-lg overflow-hidden card-hover">
+            <div class="p-4">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-semibold">区块链技术在供应链金融中的应用研究</h4>
+                <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded">已完成</span>
+              </div>
+              <p class="text-gray-dark text-sm mb-3">
+                探讨区块链技术如何解决供应链金融中的信任问题、提高交易效率及降低成本
+              </p>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-gray-dark">2023-06-08</span>
+                <div class="flex space-x-2">
+                  <button class="text-xs text-primary hover:text-primary/80">
+                    <i class="fa fa-file-pdf-o mr-1"></i> 下载报告
+                  </button>
+                  <button class="text-xs text-gray-dark hover:text-gray-600">
+                    <i class="fa fa-refresh mr-1"></i> 重新分析
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-6 px-6">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p class="text-gray-dark text-sm">© 2023 AI科研助手. 保留所有权利.</p>
+        </div>
+        <div class="flex space-x-6">
+          <a href="#" class="text-gray-dark hover:text-primary transition-custom">
+            <i class="fa fa-github text-lg"></i>
+          </a>
+          <a href="#" class="text-gray-dark hover:text-primary transition-custom">
+            <i class="fa fa-twitter text-lg"></i>
+          </a>
+          <a href="#" class="text-gray-dark hover:text-primary transition-custom">
+            <i class="fa fa-linkedin text-lg"></i>
+          </a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- JavaScript -->
+  <script>
+// 侧边栏展开/收起
+const sidebar = document.getElementById('sidebar');
+
+sidebar.addEventListener('mouseenter', () => {
+  sidebar.classList.add('nav-expand', 'nav-expanded');
+});
+
+sidebar.addEventListener('mouseleave', () => {
+  sidebar.classList.remove('nav-expand', 'nav-expanded');
+});
+
+// 导航菜单交互
+document.querySelectorAll('aside nav a').forEach(link => {
+  link.addEventListener('click', function(e) {
+    const href = this.getAttribute('href');
+    
+    // 处理锚点链接（以#开头）
+    if (href.startsWith('#') && href !== '#') {
+      e.preventDefault();
+      
+      // 移除所有激活状态
+      document.querySelectorAll('aside nav a').forEach(el => {
+        el.querySelector('div').classList.remove('bg-primary/10', 'text-primary');
+        el.querySelector('div').classList.add('text-gray-dark');
+      });
+      
+      // 添加当前激活状态
+      this.querySelector('div').classList.remove('text-gray-dark');
+      this.querySelector('div').classList.add('bg-primary/10', 'text-primary');
+      
+      // 平滑滚动到对应部分
+      const targetId = this.getAttribute('href');
+      if (targetId) {
+        document.querySelector(targetId).scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    // 其他链接（普通URL）让浏览器执行默认跳转行为
+  });
+});
+    // 通知图标点击效果
+    document.querySelector('.fa-bell-o').parentElement.addEventListener('click', function() {
+      // 这里可以添加通知面板显示逻辑
+      alert('显示通知面板');
+    });
+    
+    // 主题切换按钮
+    document.querySelector('.fa-moon-o').parentElement.addEventListener('click', function() {
+      // 这里可以添加主题切换逻辑
+      const icon = this.querySelector('i');
+      if (icon.classList.contains('fa-moon-o')) {
+        icon.classList.remove('fa-moon-o');
+        icon.classList.add('fa-sun-o');
+        // 切换到深色模式的代码
+        document.body.classList.add('dark-mode');
+      } else {
+        icon.classList.remove('fa-sun-o');
+        icon.classList.add('fa-moon-o');
+        // 切换到浅色模式的代码
+        document.body.classList.remove('dark-mode');
+      }
+    });
+    
+    // 开始调研按钮点击事件
+    document.querySelector('button:contains("开始调研")').addEventListener('click', function() {
+      const question = document.querySelector('textarea').value;
+      if (question) {
+        // 这里可以添加调用AI接口进行调研的逻辑
+        alert(`正在调研问题：${question}`);
+        // 模拟加载状态
+        this.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 调研中...';
+        this.disabled = true;
+        
+        // 模拟3秒后完成
+        setTimeout(() => {
+          this.innerHTML = '<i class="fa fa-search mr-2"></i> 开始调研';
+          this.disabled = false;
+          alert('调研完成！');
+        }, 3000);
+      } else {
+        alert('请输入调研问题');
+      }
+    });
+  </script>
+</body>
+</html>

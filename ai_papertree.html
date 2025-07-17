@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI科研助手 - 溯源树</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="tailwind.css"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- 引入Chart.js 用于可视化 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  
+  <!-- Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#00B42A', // 绿色作为辅助色，象征知识生长
+            tertiary: '#FF7D00',
+            dark: '#1D2129',
+            'gray-light': '#F2F3F5',
+            'gray-medium': '#C9CDD4',
+            'gray-dark': '#86909C'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .transition-custom {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .card-hover {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(22, 93, 255, 0.1), 0 10px 10px -5px rgba(22, 93, 255, 0.04);
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .nav-expand {
+        width: 16rem;
+      }
+      .nav-item-text {
+        opacity: 0;
+        transform: translateX(-10px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      .nav-expanded .nav-item-text {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      .nav-logo-text {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      .nav-expanded .nav-logo-text {
+        opacity: 1;
+      }
+      .tree-node {
+        transition: all 0.2s ease;
+      }
+      .tree-node:hover {
+        transform: scale(1.05);
+        z-index: 10;
+      }
+    }
+  </style>
+  
+  <style>
+    /* 自定义滚动条 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    /* 平滑滚动 */
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* 连接线样式（用于溯源树） */
+    .connection-line {
+      position: absolute;
+      background-color: #165DFF;
+      z-index: 1;
+    }
+    
+    /* 节点悬停效果 */
+    .node-hover {
+      box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.5);
+      transform: scale(1.1);
+    }
+    
+    /* 加载动画 */
+    .loader {
+      border-top-color: #165DFF;
+      animation: spinner 0.6s linear infinite;
+    }
+    @keyframes spinner {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 text-dark overflow-hidden h-screen flex">
+  <!-- 左侧导航栏 -->
+  <aside id="sidebar" class="w-16 bg-white border-r border-gray-200 flex flex-col h-full shadow-sm z-20 transition-custom">
+    <!-- 品牌标识 -->
+    <div class="h-16 w-full flex items-center justify-center border-b border-gray-200">
+      <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white">
+        <i class="fa fa-robot text-xl"></i>
+      </div>
+      <span class="nav-logo-text ml-3 text-lg font-bold text-dark">AI科研助手</span>
+    </div>
+    
+    <!-- 导航菜单 -->
+    <nav class="flex-1 w-full py-4 flex flex-col">
+      <a href="AI_research_reading.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-book text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">AI阅读</span>
+      </a>
+      <a href="ai_thinking.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-lightbulb-o text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">AI沉思</span>
+      </a>
+      <a href="ai_papertree.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+          <i class="fa fa-sitemap text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">溯源树</span>
+      </a>
+      <a href="ai_prof.html" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-users text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">学者库</span>
+      </a>
+      
+      <!-- 分隔线 -->
+      <div class="w-full h-px bg-gray-200 my-4 mx-auto w-11"></div>
+      
+      <!-- 其他功能 -->
+      <a href="#" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-cog text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">设置</span>
+      </a>
+      <a href="#" class="w-full h-12 flex items-center pl-3 mb-1 hover:bg-gray-50 transition-custom">
+        <div class="w-10 h-10 rounded-lg text-gray-dark flex items-center justify-center">
+          <i class="fa fa-question-circle text-lg"></i>
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">帮助中心</span>
+      </a>
+    </nav>
+    
+    <!-- 用户信息 -->
+    <div class="w-full p-3 border-t border-gray-200">
+      <div class="w-full flex items-center">
+        <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center cursor-pointer hover-scale">
+          <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="w-full h-full object-cover">
+        </div>
+        <span class="nav-item-text ml-3 text-gray-dark">张教授</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="flex-1 overflow-y-auto bg-gray-light">
+    <!-- 顶部导航栏 -->
+    <header class="h-16 bg-white shadow-sm flex items-center justify-between px-6 sticky top-0 z-10">
+      <div class="flex items-center">
+        <h1 class="text-xl font-bold text-dark">AI科研助手</h1>
+        <span class="ml-2 text-gray-dark text-sm">最好用的学术研究大模型助手</span>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        <!-- 搜索框 -->
+        <div class="relative hidden md:block">
+          <input type="text" placeholder="搜索文献..." class="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-custom">
+          <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-dark"></i>
+        </div>
+        
+        <!-- 通知图标 -->
+        <div class="relative cursor-pointer">
+          <i class="fa fa-bell-o text-gray-dark text-lg"></i>
+          <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">3</span>
+        </div>
+        
+        <!-- 主题切换 -->
+        <button class="w-10 h-10 rounded-full bg-gray-light flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-custom">
+          <i class="fa fa-moon-o text-gray-dark"></i>
+        </button>
+      </div>
+    </header>
+    
+    <!-- 功能介绍卡片 -->
+    <section class="px-6 py-8">
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-dark mb-2">溯源树 - 学术文献关系图谱</h2>
+            <p class="text-gray-dark max-w-2xl">
+              通过构建论文演变图帮助学者研究论文发展脉络，可视化展示不同文献之间的引用关联与影响路径
+            </p>
+          </div>
+          <div class="mt-4 md:mt-0">
+            <button class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg shadow-md transition-custom flex items-center btn-ripple">
+              <i class="fa fa-search mr-2"></i>
+              <span>开始构建溯源树</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 功能特点 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white border border-gray-200 rounded-lg p-5 card-hover">
+            <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
+              <i class="fa fa-sitemap text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">文献关系可视化</h3>
+            <p class="text-gray-dark text-sm">
+              以树形图形式直观展示文献之间的引用关系，帮助发现研究领域的发展脉络
+            </p>
+          </div>
+          
+          <div class="bg-white border border-gray-200 rounded-lg p-5 card-hover">
+            <div class="w-12 h-12 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center mb-4">
+              <i class="fa fa-search text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">关键文献识别</h3>
+            <p class="text-gray-dark text-sm">
+              自动识别领域内高影响力关键文献，分析其在研究领域发展中的核心作用
+            </p>
+          </div>
+          
+          <div class="bg-white border border-gray-200 rounded-lg p-5 card-hover">
+            <div class="w-12 h-12 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center mb-4">
+              <i class="fa fa-download text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">图谱导出</h3>
+            <p class="text-gray-dark text-sm">
+              支持将溯源树图谱导出为图片或PDF格式，方便在研究报告中引用和展示
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 溯源树搜索与参数设置 -->
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <h3 class="text-xl font-bold text-dark mb-6">搜索文献并构建溯源树</h3>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <!-- 文献搜索 -->
+          <div class="lg:col-span-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">文献标题/关键词</label>
+            <div class="relative">
+              <input 
+                type="text" 
+                id="searchQuery"
+                placeholder="输入文献标题或关键词，例如：'人工智能 机器学习'" 
+                class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-custom"
+              >
+              <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-dark"></i>
+            </div>
+          </div>
+          
+          <!-- 搜索按钮 -->
+          <div class="lg:col-span-1 flex items-end">
+            <button 
+              id="searchBtn"
+              class="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg shadow-md transition-custom flex items-center justify-center btn-ripple"
+            >
+              <i class="fa fa-search mr-2"></i>
+              <span>搜索并构建</span>
+            </button>
+          </div>
+          
+          <!-- 时间范围 -->
+          <div class="lg:col-span-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1">文献时间范围</label>
+            <select class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-custom">
+              <option>最近5年</option>
+              <option>最近10年</option>
+              <option>最近15年</option>
+              <option>全部年份</option>
+            </select>
+          </div>
+          
+          <!-- 深度设置 -->
+          <div class="lg:col-span-1">
+            <label class="block text-sm font-medium text-gray-700 mb-1">溯源深度</label>
+            <select class="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-custom">
+              <option>2级 (基础文献+直接引用)</option>
+              <option>3级 (基础文献+直接引用+间接引用)</option>
+              <option>4级 (完整溯源)</option>
