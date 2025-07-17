@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>财经AI知数 - 大模型赋能科研分析</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            dark: '#1D2939',
+            'gray-light': '#F9FAFB',
+            'gray-medium': '#667085'
+          },
+          fontFamily: {
+            inter: ['Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            'card': '0 10px 30px -5px rgba(0, 0, 0, 0.1)',
+            'card-hover': '0 20px 40px -5px rgba(22, 93, 255, 0.15)',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .scroll-indicator {
+        height: 3px;
+        background-color: #165DFF;
+        width: 0%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 100;
+        transition: width 0.2s ease;
+      }
+      .search-focus {
+        @apply focus:ring-4 focus:ring-primary/30 focus:border-primary transition-all duration-300;
+      }
+      .question-item {
+        @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+      }
+      .nav-link {
+        @apply relative text-neutral-700 hover:text-primary transition-colors duration-200;
+      }
+      .nav-link::after {
+        @apply content-[''] absolute w-0 h-0.5 bg-primary left-0 bottom-[-4px] transition-all duration-200;
+      }
+      .nav-link:hover::after {
+        @apply w-full;
+      }
+      .nav-link.active {
+        @apply text-primary font-medium;
+      }
+      .nav-link.active::after {
+        @apply w-full;
+      }
+    }
+  </style>
+</head>
+<body class="font-inter bg-neutral-100 min-h-screen flex flex-col">
+    <!-- 滚动指示器 -->
+    <div class="scroll-indicator" id="scrollIndicator"></div>
+    
+    <!-- 导航栏 -->
+    <header id="navbar" class="fixed w-full z-50 transition-all duration-300 bg-white/90 backdrop-blur-sm shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center space-x-2">
+                        <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                            <i class="fa fa-line-chart text-white text-xl"></i>
+                        </div>
+                        <span class="text-xl font-bold text-dark">财经智慧云</span>
+                    </a>
+                </div>
+                
+                <!-- 桌面导航 -->
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="nav-link">首页</a>
+                    <a href="data-marketplace.html" class="nav-link">数据超市</a>
+                    <a href="#" class="nav-link active">AI智能问数</a>
+                    <a href="https://shixun.neegle.net/practisepro_student/student#/login/0" class="nav-link">教学资源</a>
+                    <a href="#" class="nav-link">案例中心</a>
+                </nav>
+                
+                <div class="flex items-center space-x-4">
+                    <a href="#" class="hidden sm:inline-block text-primary hover:text-primary/80 font-medium transition-colors">登录</a>
+                    <a href="http://10.65.9.79:8080/apps" class="bg-primary hover:bg-primary/90 text-white font-medium px-5 py-2 rounded-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-1">
+                        <i class="fa fa-cogs"></i>
+                        <span class="hidden sm:inline">智能体工作流</span>
+                    </a>
+                    <button class="md:hidden text-dark focus:outline-none" id="mobileMenuButton">
+                        <i class="fa fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 移动端导航菜单 -->
+        <div id="mobileMenu" class="md:hidden hidden bg-white shadow-lg rounded-b-xl mx-4 overflow-hidden">
+            <div class="flex flex-col py-2">
+                <a href="index.html" class="px-4 py-3 hover:bg-gray-light transition-colors">首页</a>
+                <a href="data-marketplace.html" class="px-4 py-3 hover:bg-gray-light transition-colors">数据超市</a>
+                <a href="#" class="px-4 py-3 bg-primary/10 text-primary font-medium">AI智能问数</a>
+                <a href="#" class="px-4 py-3 hover:bg-gray-light transition-colors">教学资源</a>
+                <a href="#" class="px-4 py-3 hover:bg-gray-light transition-colors">案例中心</a>
+                <a href="#" class="px-4 py-3 text-primary hover:bg-gray-light transition-colors">登录</a>
+                <a href="workflow-platform.html" class="px-4 py-3 bg-primary/10 text-primary font-medium transition-colors flex items-center gap-2">
+                    <i class="fa fa-cogs mr-2"></i>
+                    智能体工作流
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="flex-1 pt-28 pb-16 px-4 sm:px-6 lg:px-8">
+        <div class="container mx-auto">
+            <!-- 英雄区域 -->
+            <div class="relative mb-16 overflow-hidden rounded-3xl">
+                <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10"></div>
+                <div class="relative gradient-mask py-16 md:py-24">
+                    <div class="max-w-4xl mx-auto text-center">
+                        <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-dark mb-4 leading-tight">
+                            AI智能问数
+                        </h1>
+                        <p class="text-[clamp(1rem,2vw,1.25rem)] text-gray-medium max-w-2xl mx-auto mb-8">
+                            大模型赋能科研分析，直连财经智慧云数据超市，让数据查询与分析更智能
+                        </p>
+                        
+                        <!-- 中央搜索框 -->
+                        <div class="max-w-2xl mx-auto relative">
+                            <form class="relative">
+                                <input 
+                                    type="text" 
+                                    placeholder="输入您的科研问题，例如：'2023年各省份GDP增长率对比'" 
+                                    class="w-full pl-12 pr-24 py-5 rounded-full border-2 border-neutral-200 search-focus focus:ring-4 focus:ring-primary/30 text-lg"
+                                >
+                                <a href="data_LLM.html" type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary/90 text-white font-medium px-6 py-3 rounded-full transition-all transform hover:scale-105 shadow-lg">
+                                    问数
+                                </a>
+                            </form>
+                            <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-400">
+                                <i class="fa fa-question-circle text-2xl"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- 快捷提问 -->
+                        <div class="mt-8 flex flex-wrap justify-center gap-3">
+                            <a href="#" class="bg-white hover:bg-gray-50 text-dark border border-neutral-200 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                                2023年GDP
+                            </a>
+                            <a href="#" class="bg-white hover:bg-gray-50 text-dark border border-neutral-200 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                                行业利润率对比
+                            </a>
+                            <a href="#" class="bg-white hover:bg-gray-50 text-dark border border-neutral-200 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                                货币政策影响分析
+                            </a>
+                            <a href="#" class="bg-white hover:bg-gray-50 text-dark border border-neutral-200 px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                                上市公司研发投入
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 示例问题区（财经科研类） -->
+            <div class="flex justify-center my-12">
+                <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
+                    <div class="p-6 md:p-8 border-b border-gray-100">
+                        <h3 class="text-xl font-bold text-center text-gray-800">
+                            您可以从以下问题开始AI问答
+                        </h3>
+                    </div>
+                    <div class="p-6 md:p-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- 问题卡片，点击可模拟填入搜索框 -->
+                            <div class="bg-gray-50 p-5 rounded-lg shadow-sm question-item cursor-pointer border-l-4 border-primary hover:shadow-md transition-all duration-200">
+                                <span class="font-semibold text-primary">1、</span>2016-2024年我国GDP季度环比增长率分析
+                            </div>
+                            <div class="bg-gray-50 p-5 rounded-lg shadow-sm question-item cursor-pointer border-l-4 border-primary hover:shadow-md transition-all duration-200">
+                                <span class="font-semibold text-primary">2、</span>2023年A股制造业上市公司研发投入强度排名
+                            </div>
+                            <div class="bg-gray-50 p-5 rounded-lg shadow-sm question-item cursor-pointer border-l-4 border-primary hover:shadow-md transition-all duration-200">
+                                <span class="font-semibold text-primary">3、</span>近5年长三角地区城镇居民可支配收入与消费支出相关性分析
+                            </div>
+                            <div class="bg-gray-50 p-5 rounded-lg shadow-sm question-item cursor-pointer border-l-4 border-primary hover:shadow-md transition-all duration-200">
+                                <span class="font-semibold text-primary">4、</span>2024年新能源汽车行业政策对企业利润率的影响路径
+                            </div>
+                            <div class="bg-gray-50 p-5 rounded-lg shadow-sm question-item cursor-pointer border-l-4 border-primary hover:shadow-md transition-all duration-200">
+                                <span class="font-semibold text-primary">5、</span>中美贸易摩擦前后纺织业出口额波动对比及预测
+                            </div>
+                            <div class="bg-gray-50 p-5 rounded-lg shadow-sm question-item cursor-pointer border-l-4 border-primary hover:shadow-md transition-all duration-200">
+                                <span class="font-semibold text-primary">6、</span>2020-2023年房地产开发投资完成额与GDP占比变化
+                            </div>
+                            <div class="bg-gray-50 p-5 rounded-lg shadow-sm question-item cursor-pointer border-l-4 border-primary hover:shadow-md transition-all duration-200">
+                                <span class="font-semibold text-primary">7、</span>数字经济产业增加值对第三产业贡献率的时间序列分析
+                            </div>
+                            <div class="bg-gray-50 p-5 rounded-lg shadow-sm question-item cursor-pointer border-l-4 border-primary hover:shadow-md transition-all duration-200">
+                                <span class="font-semibold text-primary">8、</span>2023年银行业不良贷款率区域分布与宏观经济关联研究
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white pt-16 pb-8">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+                <div>
+                    <div class="flex items-center space-x-2 mb-6">
+                        <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
+                            <i class="fa fa-line-chart text-primary text-xl"></i>
+                        </div>
+                        <span class="text-xl font-bold">财经智慧云</span>
+                    </div>
+                    <p class="text-gray-400 mb-6">
+                        基于大模型的财经数据智能分析平台，为科研工作者、投资者和决策者提供专业的数据服务。
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-weibo text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-wechat text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-linkedin text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-6">产品服务</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">AI智能问数</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">数据超市</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">智能体工作流</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">科研工具包</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">API服务</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-6">支持与帮助</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">使用指南</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">API文档</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">常见问题</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">联系我们</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">隐私政策</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-6">联系我们</h4>
+                    <ul class="space-y-3">
+                        <li class="flex items-start space-x-3">
+                            <i class="fa fa-map-marker mt-1 text-gray-400"></i>
+                            <span class="text-gray-400">北京市海淀区中关村南大街5号</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i class="fa fa-phone text-gray-400"></i>
+                            <span class="text-gray-400">400-888-9999</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i class="fa fa-envelope text-gray-400"></i>
+                            <span class="text-gray-400">contact@caijingai.com</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
+                <p>©2025 财经智慧云 · 大模型科研分析平台</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 移动端菜单切换
+        document.getElementById('mobileMenuButton').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // 滚动指示器
+        window.addEventListener('scroll', function() {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById("scrollIndicator").style.width = scrolled + "%";
+        });
+        
+        // 导航栏滚动效果
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('shadow-md');
+                navbar.classList.remove('shadow-sm');
+            } else {
+                navbar.classList.remove('shadow-md');
+                navbar.classList.add('shadow-sm');
+            }
+        });
+        
+        // 问题卡片点击效果（模拟填入搜索框）
+        document.querySelectorAll('.question-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const question = this.textContent.trim();
+                document.querySelector('input[placeholder*="输入您的科研问题"]').value = question;
+            });
+        });
+    </script>
+</body>
+</html>
